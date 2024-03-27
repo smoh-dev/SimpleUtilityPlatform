@@ -1,0 +1,1 @@
+call ggshield secret scan repo %CD%

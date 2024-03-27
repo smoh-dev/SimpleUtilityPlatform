@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+/packages/
+
+# IDE
+*.csproj.user
+.vs/
+.idea/
+.obsidian/
+.vscode/
+riderModule.iml
+/_ReSharper.Caches/
+
+# log files.
+log-*
+logs/
+
+# Dev only
+appsettings.Development.json
+
+# etc
+Deploy/

@@ -1,0 +1,80 @@
+using System.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+using Sup.Common;
+using Sup.Common.Entities.Redmine;
+using Sup.Common.Logger;
+using Sup.Common.Models.Responses;
+using Sup.Np.Api.Repositories.Database;
+using Sup.Np.Api.Services.Product;
+
+namespace Sup.Np.Api.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class CommonController(SupLog log, CommonService svc, IDbRepository db) : ControllerBase
+{
+    private readonly Stopwatch _sw = new();
+    private readonly SupLog _log = log.ForContext<CommonController>();
+    private readonly CommonService _svc = svc;
+    private readonly IDbRepository _db = db;
+
+    /// <summary>
+    /// Ping the server to check if it is alive.
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("ping")]
+    public IActionResult Ping()
+    {
+        return Ok();
+    }
+
+    #region Profile
+
+    /// <summary>
+    /// Get all profiles
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("profiles")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(GetProfilesResponse), 200)]
+    [ProducesResponseType(typeof(ApiResponse), 400)]
+    public async Task<IActionResult> GetProfiles()
+    {
+        try
+        {
+            _sw.Restart();
+            var profiles = await _db.GetProfilesAsync<Profile>();
+            _sw.Stop();
+            _log.Verbose("{api_name} took {time}ms",
+                nameof(GetProfiles), _sw.ElapsedMilliseconds);
+
+            var result = new GetProfilesResponse(profiles);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, Consts.ErrorCode.DatabaseError, ex.Message));
+        }
+    }
+
+    [HttpGet("profiles/es/{productCode}")]
+    public async Task<IActionResult> GetEsConfigs(string productCode)
+    {
+        try
+        {
+            _sw.Restart();
+            var esConfigs = await _svc.GetEsConfigsAsync(productCode);
+            _sw.Stop();
+            _log.Verbose("{api_name} took {time}ms",
+                nameof(GetEsConfigs), _sw.ElapsedMilliseconds);
+
+            return Ok(esConfigs);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, Consts.ErrorCode.DatabaseError, ex.Message));
+        }
+    }
+
+    #endregion Profile
+}

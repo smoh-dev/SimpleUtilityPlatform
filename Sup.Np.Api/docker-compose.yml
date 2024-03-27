@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  np-api:
+    image: smoh92/np-api:0.0.0.1
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./appsettings.json:/app/appsettings.json
