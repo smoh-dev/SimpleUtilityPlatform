@@ -81,16 +81,18 @@ public class NotionService
     private async Task<List<PutPageParam>> PatchPageAsync(List<NotionPage> pages)
     {
         var result = new List<PutPageParam>();
-        using var client = new HttpClient();
         foreach (var page in pages)
         {
             var requestUrl = $"{_profiles.NotionApiUrl}/pages/{page.ExistingPageId}";
             var request = new HttpRequestMessage(HttpMethod.Patch, requestUrl);
+            request.Headers.Add("Notion-Version", _profiles.NotionApiVersion);
+            request.Headers.Add("Authorization", _profiles.NotionApiKey);
             try
             {
                 var json = JsonSerializer.Serialize(page);
                 var content = new StringContent(json, null, "application/json");
                 request.Content = content;
+                using var client = new HttpClient();
                 var response = await client.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
@@ -127,7 +129,9 @@ public class NotionService
     {
         var result = new List<PutPageParam>();
         var requestUrl = $"{_profiles.NotionApiUrl}/pages";
-        var request = new HttpRequestMessage(HttpMethod.Put, requestUrl);
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+        request.Headers.Add("Notion-Version", _profiles.NotionApiVersion);
+        request.Headers.Add("Authorization", "Bearer " + _profiles.NotionApiKey);
         foreach (var page in pages)
         {
             try
