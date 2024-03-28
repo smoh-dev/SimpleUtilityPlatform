@@ -58,8 +58,8 @@ public class ApiService(SupLog log, string apiUrl)
         }
         catch (Exception ex)
         {
-            _log.Fatal(ex, "{method_name} failed. {error_message}",
-                nameof(GetProfilesAsync), ex.Message);
+            _log.Fatal(ex, "{method_name} failed. {error_message}({request_url})",
+                nameof(GetProfilesAsync), ex.Message, requestUrl);
         }
 
         return result;
@@ -85,8 +85,8 @@ public class ApiService(SupLog log, string apiUrl)
         }
         catch (Exception ex)
         {
-            _log.Fatal(ex, "{method_name} failed. {error_message}",
-                nameof(PutProjectsAsync), ex.Message);
+            _log.Fatal(ex, "{method_name} failed. {error_message}({request_url})",
+                nameof(PutProjectsAsync), ex.Message, requestUrl);
         }
     }
     
@@ -110,8 +110,8 @@ public class ApiService(SupLog log, string apiUrl)
         }
         catch (Exception ex)
         {
-            _log.Fatal(ex, "{method_name} failed. {error_message}",
-                nameof(PutProjectsAsync), ex.Message);
+            _log.Fatal(ex, "{method_name} failed. {error_message}({request_url})",
+                nameof(PutProjectsAsync), ex.Message, requestUrl);
         }
     }
 }
