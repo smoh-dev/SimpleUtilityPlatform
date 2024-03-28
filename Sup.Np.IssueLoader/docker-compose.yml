@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+  np-ldr:
+    image: smoh92/np-ldr:0.0.0.1
+    volumes:
+      - ./appsettings.json:/app/appsettings.json
