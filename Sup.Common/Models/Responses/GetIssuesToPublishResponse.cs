@@ -28,6 +28,7 @@ public class IssueToPublish
 
 public class GetIssuesToPublishResponse : ApiResponse
 {
+    [JsonPropertyName("issues_to_update")]
     public List<IssueToPublish> IssuesToUpdate { get; set; } = [];
 
     public GetIssuesToPublishResponse()

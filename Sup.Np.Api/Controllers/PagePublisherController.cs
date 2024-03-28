@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Sup.Common.Logger;
 using Sup.Common.Models.RequestParams;
+using Sup.Common.Models.Responses;
 using Sup.Np.Api.Services.Product;
 
 namespace Sup.Np.Api.Controllers;
@@ -32,6 +33,7 @@ public class PagePublisherController(SupLog log, PagePublisherService svc) : Con
     }
 
     [HttpGet("issues")]
+    [ProducesResponseType<GetIssuesToPublishResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPagesAsync()
     {
         _sw.Restart();
