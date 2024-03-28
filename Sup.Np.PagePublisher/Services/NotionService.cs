@@ -48,14 +48,26 @@ public class NotionService
 
     public async Task<PutPagesParam> PublishPagesAsync(List<IssueToPublish> issues)
     {
-        var pages = issues.Select(i =>
-            new NotionPage(_profiles.NotionDbId, i.PageId, i.IssueNumber, i.Title, i.Status, i.Type,
-                $"{_profiles.RedmineUrl}/issues/{i.IssueNumber}", i.Author, i.AssignedTo)
-        ).ToList();
+        var pagesToPost = new List<NotionPage>();
+        var pagesToPatch = new List<NotionPage>();
 
-        var pagesToPost = pages.Where(p => string.IsNullOrEmpty(p.ExistingPageId)).ToList();
-        var pagesToPatch = pages.Where(p => !string.IsNullOrEmpty(p.ExistingPageId)).ToList();
+        try
+        {
+            var pages = issues.Select(i =>
+                new NotionPage(_profiles.NotionDbId, i.PageId, i.IssueNumber, i.Title, i.Status, i.Type,
+                    $"{_profiles.RedmineUrl}/issues/{i.IssueNumber}", i.Author, i.AssignedTo)
+            ).ToList();
 
+            pagesToPost = pages.Where(p => string.IsNullOrEmpty(p.ExistingPageId)).ToList();
+            pagesToPatch = pages.Where(p => !string.IsNullOrEmpty(p.ExistingPageId)).ToList();
+
+        }
+        catch (Exception ex)
+        {
+            _log.Fatal(ex, "{method_name} failed. {error_message}",
+                nameof(PublishPagesAsync), ex.Message);
+        }
+        
         var result = new PutPagesParam();
         result.Pages.AddRange(await PostPageAsync(pagesToPost));
         result.Pages.AddRange(await PatchPageAsync(pagesToPatch));
@@ -114,7 +126,6 @@ public class NotionService
     private async Task<List<PutPageParam>> PostPageAsync(List<NotionPage> pages)
     {
         var result = new List<PutPageParam>();
-        using var client = new HttpClient();
         var requestUrl = $"{_profiles.NotionApiUrl}/pages";
         var request = new HttpRequestMessage(HttpMethod.Put, requestUrl);
         foreach (var page in pages)
@@ -124,6 +135,7 @@ public class NotionService
                 var json = JsonSerializer.Serialize(page);
                 var content = new StringContent(json, null, "application/json");
                 request.Content = content;
+                using var client = new HttpClient();
                 var response = await client.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 

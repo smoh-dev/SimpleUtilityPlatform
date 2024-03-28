@@ -68,7 +68,13 @@ public class PageProperties
 public class TitleProperty
 {
     [JsonPropertyName("title")]
-    public RichTextType[] RichTextValues { get; set; } = new RichTextType[1];
+    public RichTextType[] RichTextValues { get; set;}
+
+    public TitleProperty()
+    {
+        RichTextValues = new RichTextType[1];
+        RichTextValues[0] = new RichTextType();
+    }
 }
 
 public class RichTextType
@@ -76,7 +82,7 @@ public class RichTextType
     [JsonPropertyName("text")]
     public string TypeName { get; set; } = "text";
     
-    [JsonPropertyName("text")]
+    [JsonPropertyName("type")]
     public TextType Value { get; set; } = new();
 }
 
@@ -119,11 +125,24 @@ public class LinkProperty
 public class AuthorProperty
 {
     [JsonPropertyName("rich_text")]
-    public RichTextType[] RichTextValues { get; set; } = new RichTextType[1];
+    public RichTextType[] RichTextValues { get; set; }
+
+    public AuthorProperty()
+    {
+        RichTextValues = new RichTextType[1];
+        RichTextValues[0] = new RichTextType();
+    
+    }
 }
 
 public class AssignedToProperty
 {
     [JsonPropertyName("rich_text")]
-    public RichTextType[] RichTextValues { get; set; } = new RichTextType[1];
+    public RichTextType[] RichTextValues { get; set; }
+
+    public AssignedToProperty()
+    {
+        RichTextValues = new RichTextType[1];
+        RichTextValues[0] = new RichTextType();
+    }
 }
