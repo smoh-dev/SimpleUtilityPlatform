@@ -79,10 +79,10 @@ public class TitleProperty
 
 public class RichTextType
 {
-    [JsonPropertyName("text")]
+    [JsonPropertyName("type")]
     public string TypeName { get; set; } = "text";
     
-    [JsonPropertyName("type")]
+    [JsonPropertyName("text")]
     public TextType Value { get; set; } = new();
 }
 
