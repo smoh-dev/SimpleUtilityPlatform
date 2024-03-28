@@ -61,7 +61,7 @@ public class PageProperties
     [JsonPropertyName("Author")]
     public AuthorProperty Author { get; set; } = new();
     
-    [JsonPropertyName("Assigned to")]
+    [JsonPropertyName("AssignedTo")]
     public AssignedToProperty AssignedTo { get; set; } = new();
 }
 
