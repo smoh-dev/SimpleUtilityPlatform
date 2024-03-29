@@ -97,7 +97,7 @@ public partial class PostgresRepository
                              SET id        = @Id,
                                  issue_id  = @IssueId,
                                  posted_at = @PostedAt
-                             WHERE id = @Id;
+                             WHERE issue_id = @IssueId;
                              """;
         
         try

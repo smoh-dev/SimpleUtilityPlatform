@@ -30,19 +30,19 @@ public class PagePublisherService(SupLog log, IDbRepository db)
                     PostedAt = p.PostedAt,
                 }).ToList();
             
-            var pageIds = pages.Select(p => p.Id).ToList();
-            var existingPages = await _db.GetPagesAsync<Page>(pageIds);
+            var issueIds = pages.Select(p => p.IssueId).ToList();
+            var existingPages = await _db.GetPagesAsync<Page>(issueIds);
 
             var newPages = pages; 
             if (existingPages.Count > 0)
             {
-                var existingPageIds = existingPages.Select(issue => issue.Id).ToList();
-                existingPages = pages.Where(p=> existingPageIds.Contains(p.Id)).ToList();
+                var existingIssueIds = existingPages.Select(p => p.IssueId).ToList();
+                existingPages = pages.Where(p=> existingIssueIds.Contains(p.IssueId)).ToList();
                 var updatedRowCount= await _db.UpdatePagesAsync<Page>(existingPages);
                 result += updatedRowCount;
                 _log.Debug("{method_name} is working. Updated {affected_row_count} pages.",
                     nameof(UpsertPagesAsync), updatedRowCount);
-                newPages = pages.Where(p => !existingPageIds.Contains(p.Id)).ToList();
+                newPages = pages.Where(p => !existingIssueIds.Contains(p.IssueId)).ToList();
             }
 
             if (newPages.Count > 0)
