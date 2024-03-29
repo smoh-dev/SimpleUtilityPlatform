@@ -110,8 +110,8 @@ public class ApiService
         }
         catch (Exception ex)
         {
-            _log.Fatal(ex, "{method_name} failed. {error_message}",
-                nameof(PutPagesAsync), ex.Message);
+            _log.Fatal(ex, "{method_name} failed({issue_numbers}). {error_message}",
+                nameof(PutPagesAsync), string.Join(",",pagesParam.Pages.Select(p=>p.IssueNumber).ToList()) , ex.Message);
             return false;
         }
     }
