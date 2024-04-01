@@ -26,7 +26,7 @@ public class NotionPage
         ExistingPageId = pageId; // Empty if new page.
         
         Properties.Number = new NumberProperty { Number = issueNumber };
-        Properties.Title.RichTextValues[0].Value.Content = title;
+        Properties.Title.RichTextValues[0].Value.Content = $"#{issueNumber} {title}";
         Properties.Status.Value.Name = status;
         Properties.Type.Value.Name = type;
         Properties.Link.UrlValue = link;
