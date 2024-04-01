@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Sup.Common.Entities.Redmine;
 
 namespace Sup.Common.Models.Responses;
 
@@ -24,6 +25,22 @@ public class IssueToPublish
     
     [JsonPropertyName("page_id")]
     public string PageId { get; set; } = string.Empty;
+
+    public IssueToPublish()
+    {
+        
+    }
+
+    public IssueToPublish(IssueWithPageId issue)
+    {
+        Title = issue.Title;
+        Status = issue.Status;
+        Author = issue.Author;
+        IssueNumber = issue.Id;
+        Type = issue.Type;
+        AssignedTo = issue.AssignedTo;
+        PageId = issue.PageId;
+    }
 }
 
 public class GetIssuesToPublishResponse : ApiResponse

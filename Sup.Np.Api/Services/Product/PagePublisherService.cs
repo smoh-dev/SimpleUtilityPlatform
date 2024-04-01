@@ -70,38 +70,20 @@ public class PagePublisherService(SupLog log, IDbRepository db)
         var result = new GetIssuesToPublishResponse();
         try
         {
-            var issuesToPost = await _db.GetIssuesToPostPageAsync<Issue>();
+            var issuesToPost = await _db.GetIssuesToPostPageAsync<IssueWithPageId>();
             if (issuesToPost.Count > 0)
             {
                 _log.Debug("{method_name} is working. Found {issue_count} issues that need to be published.",
                     nameof(GetIssuesToPublishAsync), issuesToPost.Count);
-                result.IssuesToUpdate.AddRange(issuesToPost.Select(i => new IssueToPublish
-                {
-                    Title = i.Title,
-                    Status = i.Status,
-                    Author = i.Author,
-                    IssueNumber = i.Id,
-                    Type = i.Type,
-                    AssignedTo = i.AssignedTo,
-                    PageId = string.Empty,
-                }).ToList()); 
+                result.IssuesToUpdate.AddRange(issuesToPost.Select(i => new IssueToPublish(i)).ToList()); 
             }
-            
+
             var issuesToPatch = await _db.GetIssuesToPatchPageAsync<IssueWithPageId>();
             if (issuesToPatch.Count > 0)
             {
                 _log.Debug("{method_name} is working. Found {issue_count} issues that need to be updated.",
                     nameof(GetIssuesToPublishAsync), issuesToPost.Count);
-                result.IssuesToUpdate.AddRange(issuesToPatch.Select(i => new IssueToPublish
-                {
-                    Title = i.Title,
-                    Status = i.Status,
-                    Author = i.Author,
-                    IssueNumber = i.Id,
-                    Type = i.Type,
-                    AssignedTo = i.AssignedTo,
-                    PageId = i.PageId,
-                }).ToList()); 
+                result.IssuesToUpdate.AddRange(issuesToPatch.Select(i => new IssueToPublish(i)).ToList()); 
             }
             
             _log.Debug("{method_name} success. {issue_count} issues found.",

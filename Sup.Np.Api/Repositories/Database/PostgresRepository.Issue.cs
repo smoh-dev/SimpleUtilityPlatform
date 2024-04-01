@@ -180,22 +180,24 @@ public partial class PostgresRepository
     public async Task<List<T>> GetIssuesToPostPageAsync<T>()
     {
         const string query = """
-                             SELECT id              AS Id,
-                                    project_id      AS ProjectId,
-                                    type            AS Type,
-                                    status          AS Status,
-                                    priority        AS Priority,
-                                    assigned_to     AS AssignedTo,
-                                    target_version  AS TargetVersion,
-                                    category_name   AS CategoryName,
-                                    parent_issue_id AS ParentIssueId,
-                                    title           AS Title,
-                                    created_on      AS CreatedOn,
-                                    updated_on      AS UpdatedOn,
-                                    last_posted_on  AS LastPostedOn,
-                                    author          AS Author
-                               FROM issue
-                              WHERE last_posted_on IS NULL;
+                             SELECT p.id              AS PageId,
+                                    i.id              AS Id,
+                                    i.project_id      AS ProjectId,
+                                    i.type            AS Type,
+                                    i.status          AS Status,
+                                    i.priority        AS Priority,
+                                    i.assigned_to     AS AssignedTo,
+                                    i.target_version  AS TargetVersion,
+                                    i.category_name   AS CategoryName,
+                                    i.parent_issue_id AS ParentIssueId,
+                                    i.title           AS Title,
+                                    i.created_on      AS CreatedOn,
+                                    i.updated_on      AS UpdatedOn,
+                                    i.last_posted_on  AS LastPostedOn,
+                                    i.author          AS Author
+                             FROM issue i
+                                      LEFT OUTER JOIN page p ON i.id = p.issue_id
+                             WHERE i.last_posted_on IS NULL;
                              """;
 
         try
@@ -213,7 +215,8 @@ public partial class PostgresRepository
     public async Task<List<T>> GetIssuesToPatchPageAsync<T>()
     {
         const string query = """
-                             SELECT i.id              AS Id,
+                             SELECT p.id              AS PageId,
+                                    i.id              AS Id,
                                     i.project_id      AS ProjectId,
                                     i.type            AS Type,
                                     i.status          AS Status,
@@ -228,7 +231,7 @@ public partial class PostgresRepository
                                     i.last_posted_on  AS LastPostedOn,
                                     i.author          AS Author
                              FROM issue AS i
-                                      RIGHT OUTER JOIN page AS p ON i.id = p.issue_id
+                                      JOIN page AS p ON i.id = p.issue_id
                              WHERE (last_posted_on < updated_on
                                  OR last_posted_on > (SELECT posted_at
                                                       FROM page

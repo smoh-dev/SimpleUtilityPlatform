@@ -9,7 +9,6 @@ public class Issue
     [JsonPropertyName("id")]
     public long Id { get; set; }
     
-    
     [Column("project_id")]
     [JsonPropertyName("project_id")]
     public long ProjectId { get; set; }
@@ -61,4 +60,27 @@ public class Issue
     [Column("author")]
     [JsonPropertyName("author")]
     public string Author { get; set; } = string.Empty;
+
+    public Issue()
+    {
+        
+    }
+
+    public Issue(Issue issue)
+    {
+        Id = issue.Id;
+        ProjectId = issue.ProjectId;
+        Type = issue.Type;
+        Status = issue.Status;
+        Priority = issue.Priority;
+        AssignedTo = issue.AssignedTo;
+        TargetVersion = issue.TargetVersion;
+        CategoryName = issue.CategoryName;
+        ParentIssueId = issue.ParentIssueId;
+        Title = issue.Title;
+        CreatedOn = issue.CreatedOn;
+        UpdatedOn = issue.UpdatedOn;
+        LastPostedOn = issue.LastPostedOn;
+        Author = issue.Author;
+    }
 }
