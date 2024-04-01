@@ -17,7 +17,7 @@ public class RedmineFields
 public class RedmineIssue
 {
     [JsonPropertyName("id")]
-    public int Id { get; set; }
+    public long Id { get; set; }
     
     [JsonPropertyName("project")]
     public RedmineFields Project { get; set; } = new();
