@@ -74,7 +74,7 @@ public class RedmineService(SupLog log, IssueLoaderProfiles profiles)
         {
             try
             {
-                var requestUrl = $"{baseUrl}&offset={offset}&limit={Limit}" +
+                var requestUrl = $"{baseUrl}&status_id=*&offset={offset}&limit={Limit}" +
                                  $"&updated_on=%3E%3D{_lastLoadedTime:yyyy-MM-ddTHH:mm:ssZ}";
                 var response = await client.GetAsync(requestUrl);
                 response.EnsureSuccessStatusCode();
@@ -103,6 +103,42 @@ public class RedmineService(SupLog log, IssueLoaderProfiles profiles)
 
         _log.Debug("{method_name} get {issue_count} issues from project {projectId}.",
             nameof(GetIssuesAsync), issues.Count, projectId);
+
+        return issues;
+    }
+
+
+    public async Task<List<RedmineIssue>> GetIssuesAsync(string issueIds)
+    {
+        List<RedmineIssue> issues = [];
+        var baseUrl = $"{_url}/issues.json?issue_id={issueIds}";
+
+        using var client = new HttpClient();
+        client.DefaultRequestHeaders.Add("X-Redmine-API-Key", _key);
+        try
+        {
+            var response = await client.GetAsync($"{baseUrl}&status_id=*&offset=0&limit={Limit}");
+            response.EnsureSuccessStatusCode();
+
+            var contents = await response.Content.ReadAsStringAsync();
+            var redmineIssuesResponse = JsonSerializer.Deserialize<RedmineIssuesResponse>(contents);
+            if(redmineIssuesResponse != null)
+                issues.AddRange(redmineIssuesResponse.Issues);
+
+            await Task.Delay(500); // To avoid API rate limit exceeded.
+        }
+        catch (Exception ex)
+        {
+            _log.Fatal(ex, "{method_name} failed. {error_message}",
+                nameof(GetProjectsAsync), ex.Message);
+        }
+            
+        _log.Verbose("{method_name} details: {issue_count}"
+            , nameof(GetIssuesAsync), issues.Count, _lastLoadedTime);
+        _lastLoadedTime = DateTime.Now;
+
+        _log.Debug("{method_name} get {issue_count} issues.",
+            nameof(GetIssuesAsync), issues.Count);
 
         return issues;
     }

@@ -2,6 +2,7 @@ using System.Data;
 using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Logger;
+using Sup.Common.Models.Redmine;
 using Sup.Np.IssueLoader.Services;
 
 namespace Sup.Np.IssueLoader;
@@ -51,14 +52,49 @@ public class IssueLoaderWorker : BackgroundService
         
         while (!stoppingToken.IsCancellationRequested)
         {
+            var unpublishedIssueNumbers = await _apiSvc.GetUnpublishedIssuesAsync();
+            var redmineIssues = await GetUnpublishedIssues(unpublishedIssueNumbers);
             foreach (var id in _profiles.TargetProjectIds)
-            {
-                var redmineIssues = await _redmineSvc.GetIssuesAsync(id);
-                if(redmineIssues.Count > 0)
-                    await _apiSvc.PutIssuesAsync(redmineIssues);
-            }
-
+                redmineIssues.AddRange(await _redmineSvc.GetIssuesAsync(id));
+            if(redmineIssues.Count > 0)
+                await _apiSvc.PutIssuesAsync(redmineIssues);
             await Task.Delay(_interval, stoppingToken);
         }
+    }
+    
+    /// <summary>
+    /// Get issues by issue ids from Redmine.
+    /// </summary>
+    /// <param name="issueNumbers"></param>
+    /// <returns></returns>
+    private async Task<List<RedmineIssue>> GetUnpublishedIssues(List<long> issueNumbers)
+    {
+        var result = new List<RedmineIssue>();
+        var offset = 0;
+        var issueNumberArg = "";
+        foreach(var issueNumber in issueNumbers)
+        {
+            if (offset == 0) issueNumberArg = "";
+            issueNumberArg += $"{issueNumber},";
+            offset++;
+            if (offset != 100) continue;
+            result.AddRange(await _redmineSvc.GetIssuesAsync(issueNumberArg.TrimEnd(',')));
+            offset = 0;
+        }
+        result.AddRange(await _redmineSvc.GetIssuesAsync(issueNumberArg.TrimEnd(',')));
+        
+        // Deleted issues
+        var retrievedIssueNumbers = result.Select(issue => issue.Id).ToList();
+        var deletedIssueNumbers = issueNumbers.Except(retrievedIssueNumbers).ToList();
+        var deletedIssues = deletedIssueNumbers.Select(deletedIssueNumber => new RedmineIssue
+            {
+                Id = deletedIssueNumber,
+                Status = new RedmineFields { Name = "UnManaged" },
+                Title = "Deleted Issues",
+            })
+            .ToList();
+        await _apiSvc.PutIssuesAsync(deletedIssues);
+        
+        return result;
     }
 }

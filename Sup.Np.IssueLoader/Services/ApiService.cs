@@ -114,4 +114,34 @@ public class ApiService(SupLog log, string apiUrl)
                 nameof(PutProjectsAsync), ex.Message, requestUrl);
         }
     }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<long>> GetUnpublishedIssuesAsync()
+    {
+        using var client = new HttpClient();
+        var requestUrl = $"{_url}/IssueLoader/issues/unpublished";
+        
+        try
+        {
+            var response = await client.GetAsync(requestUrl);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            var res = JsonSerializer.Deserialize<GetUnpublishedIssuesResponse>(json);
+            if (res == null)
+                throw new NoNullAllowedException("Deserialization failed.");
+            
+            _log.Debug("{method_name} success.",
+                nameof(GetUnpublishedIssuesAsync));
+            return res.IssueNumbers;
+        }
+        catch (Exception ex)
+        {
+            _log.Fatal(ex, "{method_name} failed. {error_message}({request_url})",
+                nameof(GetUnpublishedIssuesAsync), ex.Message, requestUrl);
+            return new List<long>();
+        }
+    }
 }
