@@ -246,4 +246,24 @@ public partial class PostgresRepository
             await _conn.CloseAsync();
         }
     }
+
+    public async Task<List<T>> GetUnpublishedIssuesAsync<T>()
+    {
+        const string query = """
+                             select page.issue_id
+                             from issue
+                                      right join page on issue.id = page.issue_id
+                             where issue.id is null;
+                             """;
+        try
+        {
+            await _conn.OpenAsync();
+            var result = await _conn.QueryAsync<T>(query);
+            return result.ToList();
+        }
+        finally
+        {
+            await _conn.CloseAsync();
+        }
+    }
 }

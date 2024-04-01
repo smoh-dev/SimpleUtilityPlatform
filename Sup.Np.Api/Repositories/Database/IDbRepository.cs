@@ -61,7 +61,13 @@ public interface IDbRepository
     /// </summary>
     /// <returns>Retrieved list of issues. If failed, return null.</returns>
     public Task<List<T>> GetIssuesToPatchPageAsync<T>();
-    
+
+    /// <summary>
+    /// Gets issue numbers with page information but no issue information.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public Task<List<T>> GetUnpublishedIssuesAsync<T>();
     #endregion Issue
     
     #region Page

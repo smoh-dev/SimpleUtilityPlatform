@@ -132,4 +132,28 @@ public class IssueLoaderService(SupLog log, IDbRepository db)
             return new ModifyResultResponse(false, Consts.ErrorCode.DatabaseError, ex.Message);
         }
     }
+
+    /// <summary>
+    /// Gets issue numbers with page information but no issue information.
+    /// </summary>
+    /// <returns></returns>
+    public async Task <GetUnpublishedIssuesResponse> GetUnpublishedIssuesAsync()
+    {
+        try
+        {
+            var issueNumbers = await _db.GetUnpublishedIssuesAsync<long>();
+            // Remove test issues.
+            issueNumbers = issueNumbers.Where(issueNumber => issueNumber > 0).ToList();
+            _log.Debug("{method_name} success. Retrieved {issue_count} issues.",
+                nameof(GetUnpublishedIssuesAsync), issueNumbers.Count);
+            
+            return new GetUnpublishedIssuesResponse { IssueNumbers = issueNumbers };
+        }
+        catch (Exception ex)
+        {
+            _log.Fatal(ex, "{method_name} failed. {error_message}",
+                nameof(GetUnpublishedIssuesAsync), ex.Message);
+            return new GetUnpublishedIssuesResponse(false, Consts.ErrorCode.DatabaseError, ex.Message);
+        }
+    }
 }

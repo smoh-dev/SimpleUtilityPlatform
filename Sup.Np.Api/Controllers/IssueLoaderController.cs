@@ -46,4 +46,21 @@ public class IssueLoaderController(SupLog log, IssueLoaderService svc ) : Contro
             return NoContent();
         return Ok(result);
     }
+    
+    [HttpGet("issues/unpublished")]
+    public async Task<IActionResult> GetUnpublishedIssuesAsync()
+    {
+        _sw.Restart();
+        var result = await svc.GetUnpublishedIssuesAsync();
+        _sw.Stop();
+        
+        log.Verbose("{api_name} took {running_time}ms.", 
+            nameof(GetUnpublishedIssuesAsync), _sw.ElapsedMilliseconds);
+        
+        if(!result.Success)
+            return BadRequest(result);
+        if (result.IssueNumbers.Count == 0)
+            return NoContent();
+        return Ok(result);
+    }
 }
