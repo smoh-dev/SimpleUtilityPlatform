@@ -1,3 +1,5 @@
+using System.Collections;
+using Sup.Common.Entities.QueryParams;
 using Sup.Common.Entities.Redmine;
 
 namespace Sup.Np.Api.Repositories.Database;
@@ -68,6 +70,14 @@ public interface IDbRepository
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     public Task<List<T>> GetUnpublishedIssuesAsync<T>();
+
+    /// <summary>
+    /// Update the published time since the page corresponding to the issue was published.
+    /// </summary>
+    /// <param name="param"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public Task<int> UpdateIssueLastPostedOnAsync<T>(List<UpdateIssueLastPostedOnParam> param);
     #endregion Issue
     
     #region Page

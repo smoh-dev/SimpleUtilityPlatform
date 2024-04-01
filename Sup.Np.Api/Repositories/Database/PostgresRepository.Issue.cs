@@ -1,4 +1,6 @@
+using System.Collections;
 using Dapper;
+using Sup.Common.Entities.QueryParams;
 using Sup.Common.Entities.Redmine;
 
 namespace Sup.Np.Api.Repositories.Database;
@@ -263,6 +265,25 @@ public partial class PostgresRepository
             await _conn.OpenAsync();
             var result = await _conn.QueryAsync<T>(query);
             return result.ToList();
+        }
+        finally
+        {
+            await _conn.CloseAsync();
+        }
+    }
+
+    public async Task<int> UpdateIssueLastPostedOnAsync<T>(List<UpdateIssueLastPostedOnParam> param)
+    {
+        const string query = """
+                             UPDATE public.issue
+                             SET last_posted_on = @LastPostedOn
+                             WHERE issue.id = @IssueNumber;
+                             """;
+        try
+        {
+            await _conn.OpenAsync();
+            var result = await _conn.ExecuteAsync(query, param);
+            return result;
         }
         finally
         {
