@@ -1,4 +1,5 @@
 using System.Data;
+using System.Net;
 using System.Text.Json;
 using Sup.Common;
 using Sup.Common.Logger;
@@ -84,6 +85,8 @@ public class ApiService
             var requestUrl = $"{_url}/PagePublisher/issues";
             var response = await client.GetAsync(requestUrl);
             response.EnsureSuccessStatusCode();
+            if (response.StatusCode != HttpStatusCode.NoContent)
+                return issuesToPublish;
             var responseString = await response.Content.ReadAsStringAsync();
             var issuesToUpdateResponse = JsonSerializer.Deserialize<GetIssuesToPublishResponse>(responseString);
             if (issuesToUpdateResponse != null)
