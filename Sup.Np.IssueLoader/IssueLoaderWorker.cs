@@ -24,14 +24,16 @@ public class IssueLoaderWorker : BackgroundService
 #endif
 
         // Validate.
-        var apiUrl = configs["ApiUrl"];
+        var apiHost = Environment.GetEnvironmentVariable("API_HOST");
+        var apiPort = Environment.GetEnvironmentVariable("API_PORT");
+        var apiUrl = !string.IsNullOrEmpty(apiHost) ? $"http://{apiHost}:{apiPort}" : configs["ApiUrl"];
         if (string.IsNullOrEmpty(apiUrl))
-            throw new NoNullAllowedException("Api url is not set in appsettings.json");
+            throw new NoNullAllowedException("Api url is not set.");
 
         // Create loader and api service.
-        var encKey = configs["EncryptKey"];
+        var encKey = Environment.GetEnvironmentVariable("ENCRYPT_KEY") ?? configs["EncryptKey"];
         if (encKey == null)
-            throw new NoNullAllowedException("EncryptKey is not set in appsettings.json");
+            throw new NoNullAllowedException("EncryptKey is not set.");
         var enc = new Encrypter(encKey);
         var esConfigs = new EsConfigs(Consts.ProductCode.NpIssueLoader, apiUrl);
         esConfigs.EsPassword = enc.Decrypt(esConfigs.EsPassword);
