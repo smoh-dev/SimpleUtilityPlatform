@@ -199,7 +199,9 @@ public partial class PostgresRepository
                                     i.author          AS Author
                              FROM issue i
                                       LEFT OUTER JOIN page p ON i.id = p.issue_id
-                             WHERE i.last_posted_on IS NULL;
+                             WHERE i.last_posted_on IS NULL
+                               AND i.status != 'UnManaged';
+                             
                              """;
 
         try
@@ -237,7 +239,8 @@ public partial class PostgresRepository
                              WHERE (last_posted_on < updated_on
                                  OR last_posted_on > (SELECT posted_at
                                                       FROM page
-                                                      WHERE issue_id = i.id));
+                                                      WHERE issue_id = i.id))
+                               AND i.status != 'UnManaged';
                              """;
 
         try
