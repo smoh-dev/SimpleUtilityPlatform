@@ -2,6 +2,7 @@ using System.Data;
 using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Logger;
+using Sup.Common.Utils;
 using Sup.Np.PagePublisher.Services;
 
 namespace Sup.Np.PagePublisher;
@@ -26,11 +27,20 @@ public class PagePublisherWorker : BackgroundService
         if (string.IsNullOrEmpty(apiUrl))
             throw new NoNullAllowedException("Api url is not set in appsettings.json");
 
-        // Create logger and api service.
+        // Create loader and api service.
+        var encKey = configs["EncryptKey"];
+        if (encKey == null)
+            throw new NoNullAllowedException("EncryptKey is not set in appsettings.json");
+        var enc = new Encrypter(encKey);
         var esConfigs = new EsConfigs(Consts.ProductCode.NpIssueLoader, apiUrl);
+        esConfigs.EsPassword = enc.Decrypt(esConfigs.EsPassword);
         var log = new SupLog(true, esConfigs);
         if (log.IsEnabledEsLog())
+        {
+            log.Verbose("{es_url}({es_index})/{es_user}@{es_password}"
+                , esConfigs.EsUrl, esConfigs.EsIndex, esConfigs.EsUser, esConfigs.EsPassword.Length);
             log.Info("Elasticsearch log enabled.");
+        }
         _apiSvc = new ApiService(log, apiUrl);
 
         // Load profiles.       
