@@ -109,11 +109,13 @@ public class NotionService
                 
                 _log.Debug("{method_name} success. Issue {issue_id} has been updated to pages {notion_page_id}.",
                     nameof(PatchPageAsync), page.Properties.Number.Number, postPageResponse.PostedPageId);
+                
+                await Task.Delay(500); // To avoid API rate limit exceeded.
             }
             catch (Exception ex)
             {
-                _log.Fatal(ex, "{method_name} failed.  {error_message}",
-                    nameof(PatchPageAsync), ex.Message);
+                _log.Fatal(ex, "{method_name} failed({issue_number}).  {error_message}",
+                    nameof(PatchPageAsync), page.Properties.Number.Number, ex.Message);
             }
         }
 
@@ -129,13 +131,14 @@ public class NotionService
     {
         var result = new List<PutPageParam>();
         var requestUrl = $"{_profiles.NotionApiUrl}/pages";
-        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-        request.Headers.Add("Notion-Version", _profiles.NotionApiVersion);
-        request.Headers.Add("Authorization", "Bearer " + _profiles.NotionApiKey);
+
         foreach (var page in pages)
         {
             try
             {
+                var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+                request.Headers.Add("Notion-Version", _profiles.NotionApiVersion);
+                request.Headers.Add("Authorization", "Bearer " + _profiles.NotionApiKey);
                 var json = JsonSerializer.Serialize(page);
                 var content = new StringContent(json, null, "application/json");
                 request.Content = content;
@@ -156,11 +159,13 @@ public class NotionService
                 
                 _log.Debug("{method_name} success. Issue {issue_id} has been posted to pages {notion_page_id}.",
                     nameof(PostPageAsync), page.Properties.Number.Number, postPageResponse.PostedPageId);
+                
+                await Task.Delay(500); // To avoid API rate limit exceeded.
             }
             catch (Exception ex)
             {
-                _log.Fatal(ex, "{method_name} failed.  {error_message}",
-                    nameof(PostPageAsync), ex.Message);
+                _log.Fatal(ex, "{method_name} failed({issue_number}).  {error_message}",
+                    nameof(PostPageAsync), page.Properties.Number.Number, ex.Message);
             }
         }
 
