@@ -53,11 +53,16 @@ public class IssueLoaderWorker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             var unpublishedIssueNumbers = await _apiSvc.GetUnpublishedIssuesAsync();
-            var redmineIssues = await GetUnpublishedIssues(unpublishedIssueNumbers);
+            List<RedmineIssue> redmineIssues = new();
+            if(unpublishedIssueNumbers.Count > 0)
+                redmineIssues = await GetUnpublishedIssues(unpublishedIssueNumbers);
+            
             foreach (var id in _profiles.TargetProjectIds)
                 redmineIssues.AddRange(await _redmineSvc.GetIssuesAsync(id));
+
             if(redmineIssues.Count > 0)
                 await _apiSvc.PutIssuesAsync(redmineIssues);
+            
             await Task.Delay(_interval, stoppingToken);
         }
     }

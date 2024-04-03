@@ -1,4 +1,5 @@
 using System.Data;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using Sup.Common;
@@ -128,6 +129,7 @@ public class ApiService(SupLog log, string apiUrl)
         {
             var response = await client.GetAsync(requestUrl);
             response.EnsureSuccessStatusCode();
+            if (response.StatusCode == HttpStatusCode.NoContent) return new List<long>();
             var json = await response.Content.ReadAsStringAsync();
             var res = JsonSerializer.Deserialize<GetUnpublishedIssuesResponse>(json);
             if (res == null)
