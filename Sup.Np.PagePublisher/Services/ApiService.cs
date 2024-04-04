@@ -106,6 +106,9 @@ public class ApiService
     /// <param name="param"></param>
     public async Task PutPagesAsync(PutPagesParam param)
     {
+        if (param.Pages.Count == 0)
+            return;
+        
         using var client = new HttpClient();
         var requestUrl = $"{_url}/PagePublisher/pages";
         var request = new HttpRequestMessage(HttpMethod.Put, requestUrl);

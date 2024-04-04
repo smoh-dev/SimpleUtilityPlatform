@@ -59,11 +59,8 @@ public class PagePublisherWorker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             var issuesToPublish = await _apiSvc.GetIssuesToPublishAsync();
-            if (issuesToPublish.Count == 0)
-            {
-                var publishResult = await _notionSvc.PublishPagesAsync(issuesToPublish);
-                await _apiSvc.PutPagesAsync(publishResult);
-            }
+            var publishResult = await _notionSvc.PublishPagesAsync(issuesToPublish);
+            await _apiSvc.PutPagesAsync(publishResult);
             await Task.Delay(_interval, stoppingToken);
         }
     }
