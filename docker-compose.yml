@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  np-api:
+    image: smoh92/np-api:latest
+    ports:
+      - "3000:8080"
+    environment:
+      - DB_HOST=localhost
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=changeme
+      - DB_NAME=yourdb
+      - ENCRYPT_KEY=1234567890123456
+      - ENABLE_SWAGGER=false
+
+  np-ldr:
+    image: smoh92/np-ldr:latest
+    environment:
+      - API_HOST=localhost
+      - API_PORT=8080
+      - ENCRYPT_KEY=1234567890123456
+    depends_on:
+      - np-api
+
+  np-pub:
+    image: smoh92/np-pub:latest
+    environment:
+      - API_HOST=localhost
+      - API_PORT=8080
+      - ENCRYPT_KEY=1234567890123456
+    depends_on:
+      - np-api
