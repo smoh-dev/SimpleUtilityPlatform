@@ -9,18 +9,18 @@ public partial class PostgresRepository : IDbRepository
     public PostgresRepository(IConfiguration configs)
     {
         var dbSection = configs.GetSection("Database");
-        var dbConnectionString = dbSection.GetValue<string>("ConnectionString");
-        var dbHost = dbSection.GetValue<string>("Host");
-        var dbPort = dbSection.GetValue<int>("Port");
-        var dbUser = dbSection.GetValue<string>("User");
-        var dbPassword = dbSection.GetValue<string>("Password");
-        var dbName = dbSection.GetValue<string>("Database");
+        var dbConnectionString = dbSection.GetValue<string>("ConnectionString"); // Not used yet.
+        var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? dbSection.GetValue<string>("Host");
+        var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? dbSection.GetValue<string>("Port");
+        var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? dbSection.GetValue<string>("User");
+        var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? dbSection.GetValue<string>("Password");
+        var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? dbSection.GetValue<string>("Database");
 
-        if (!string.IsNullOrEmpty(dbConnectionString))
-            _conn = new NpgsqlConnection(dbConnectionString);
-        else
-            _conn = new NpgsqlConnection(
-                $"Host={dbHost};Port={dbPort};Username={dbUser};Password={dbPassword};Database={dbName};");
+        var connString = !string.IsNullOrEmpty(dbConnectionString)
+            ? dbConnectionString
+            : $"Host={dbHost};Port={dbPort};Username={dbUser};Password={dbPassword};Database={dbName};";
+        
+        _conn = new NpgsqlConnection(connString);
     }
 
 }
