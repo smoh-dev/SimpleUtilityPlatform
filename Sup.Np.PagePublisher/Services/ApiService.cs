@@ -85,7 +85,7 @@ public class ApiService
             var requestUrl = $"{_url}/PagePublisher/issues";
             var response = await client.GetAsync(requestUrl);
             response.EnsureSuccessStatusCode();
-            if (response.StatusCode != HttpStatusCode.NoContent)
+            if (response.StatusCode == HttpStatusCode.NoContent)
                 return issuesToPublish;
             var responseString = await response.Content.ReadAsStringAsync();
             var issuesToUpdateResponse = JsonSerializer.Deserialize<GetIssuesToPublishResponse>(responseString);
