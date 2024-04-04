@@ -120,9 +120,14 @@ public class IssueLoaderService(SupLog log, IDbRepository db)
             var insertedRowCount = await _db.InsertIssuesAsync<int>(newIssues);
             result += insertedRowCount;
             _log.Debug("{method_name} is working. Updated {affected_row_count} issues.",
-                nameof(UpsertIssuesAsync), insertedRowCount);
-            _log.Debug("{method_name} success. {affected_row_count} rows affected.",
-                nameof(UpsertIssuesAsync), result);
+                    nameof(UpsertIssuesAsync), insertedRowCount);
+            if(result > 0)
+                _log.Debug("{method_name} success. {affected_row_count} rows affected.",
+                    nameof(UpsertIssuesAsync), result);
+            else
+                _log.Warn("{method_name} success but no rows affected. {issue_numbers}",
+                    nameof(UpsertIssuesAsync), string.Join(',', param.Issues.Select(issue => issue.Id).ToList()));
+            
             return new ModifyResultResponse { AffectedRowCount = result };
         }
         catch (Exception ex)

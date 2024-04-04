@@ -116,6 +116,12 @@ public class ApiService
             request.Content = content;
             var response = await client.SendAsync(request); 
             response.EnsureSuccessStatusCode();
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                _log.Warn("{method_name} success but no pages affected. {issue_numbers}",
+                    nameof(PutPagesAsync), string.Join(',', param.Pages.Select(page => page.IssueNumber).ToList()));
+                return;
+            }
             var result = JsonSerializer.Deserialize<ModifyResultResponse>(await response.Content.ReadAsStringAsync());
             if (result == null)
                 throw new NoNullAllowedException("Deserialization failed.");
