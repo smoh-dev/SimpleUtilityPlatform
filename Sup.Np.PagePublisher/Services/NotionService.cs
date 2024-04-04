@@ -51,9 +51,6 @@ public class NotionService
         var pagesToPost = new List<NotionPage>();
         var pagesToPatch = new List<NotionPage>();
 
-        if(issues.Count == 0)
-            return new PutPagesParam();
-        
         try
         {
             var pages = issues.Select(i =>

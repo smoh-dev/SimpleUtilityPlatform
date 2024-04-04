@@ -11,6 +11,7 @@ public class PagePublisherWorker : BackgroundService
 {
     private readonly int _interval;
     private readonly PagePublisherProfiles _profiles;
+    private readonly SupLog _log;
     private readonly ApiService _apiSvc;
     private readonly NotionService _notionSvc;
 
@@ -36,20 +37,20 @@ public class PagePublisherWorker : BackgroundService
         var enc = new Encrypter(encKey);
         var esConfigs = new EsConfigs(Consts.ProductCode.NpIssueLoader, apiUrl);
         esConfigs.EsPassword = enc.Decrypt(esConfigs.EsPassword);
-        var log = new SupLog(true, esConfigs);
-        if (log.IsEnabledEsLog())
+        _log = new SupLog(true, esConfigs);
+        if (_log.IsEnabledEsLog())
         {
-            log.Verbose("{es_url}({es_index})/{es_user}@{es_password}"
+            _log.Verbose("{es_url}({es_index})/{es_user}@{es_password}"
                 , esConfigs.EsUrl, esConfigs.EsIndex, esConfigs.EsUser, esConfigs.EsPassword.Length);
-            log.Info("Elasticsearch log enabled.");
+            _log.Info("Elasticsearch log enabled.");
         }
-        _apiSvc = new ApiService(log, apiUrl);
+        _apiSvc = new ApiService(_log, apiUrl);
 
         // Load profiles.       
         _profiles = _apiSvc.GetProfilesAsync().Result;
 
         // Create notion service and test.
-        _notionSvc = new NotionService(log, _profiles);
+        _notionSvc = new NotionService(_log, _profiles);
         if (!_notionSvc.ConnectionTestAsync().Result)
             throw new Exception("Failed to connect to Notion API.");
     }
@@ -59,8 +60,16 @@ public class PagePublisherWorker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             var issuesToPublish = await _apiSvc.GetIssuesToPublishAsync();
-            var publishResult = await _notionSvc.PublishPagesAsync(issuesToPublish);
-            await _apiSvc.PutPagesAsync(publishResult);
+            if (issuesToPublish.Count > 0)
+            {
+                _log.Verbose("Found {issue_count} issues to publish.", issuesToPublish.Count);
+                var publishResult = await _notionSvc.PublishPagesAsync(issuesToPublish);
+                await _apiSvc.PutPagesAsync(publishResult);
+            }
+            else
+            {
+                _log.Verbose("No issues to publish.");
+            }
             await Task.Delay(_interval, stoppingToken);
         }
     }
