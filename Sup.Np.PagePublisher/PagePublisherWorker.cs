@@ -35,7 +35,7 @@ public class PagePublisherWorker : BackgroundService
         if (encKey == null)
             throw new NoNullAllowedException("EncryptKey is not set.");
         var enc = new Encrypter(encKey);
-        var esConfigs = new EsConfigs(Consts.ProductCode.NpIssueLoader, apiUrl);
+        var esConfigs = new EsConfigs(Consts.ProductCode.NpPagePublisher, apiUrl);
         esConfigs.EsPassword = enc.Decrypt(esConfigs.EsPassword);
         _log = new SupLog(true, esConfigs);
         if (_log.IsEnabledEsLog())
