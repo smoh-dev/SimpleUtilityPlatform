@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   np-ldr:
-    image: smoh92/np-ldr:latest
+    image: smoh92/np-pub:latest
     #If you use environment variables, 
     #delete the volumes section and enable the environment section. 
     volumes:

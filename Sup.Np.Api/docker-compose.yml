@@ -2,8 +2,18 @@ version: '3.8'
 
 services:
   np-api:
-    image: smoh92/np-api:0.0.0.1
+    image: smoh92/np-api:latest
     ports:
       - "8080:8080"
+    # If you use environment variables, 
+    # delete the volumes section and enable the environment section. 
     volumes:
       - ./appsettings.json:/app/appsettings.json
+    #environment:
+    #  - DB_HOST=localhost
+    #  - DB_PORT=5432
+    #  - DB_USER=postgres
+    #  - DB_PASSWORD=changeme
+    #  - DB_NAME=yourdb
+    #  - ENCRYPT_KEY=1234567890123456
+    #  - ENABLE_SWAGGER=false
