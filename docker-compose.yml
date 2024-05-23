@@ -31,3 +31,9 @@ services:
       - ENCRYPT_KEY=1234567890123456
     depends_on:
       - np-api
+
+  # sup.mm.api:
+  #   image: sup.mm.api
+  #   build:
+  #     context: .
+  #     dockerfile: Sup.Mm.Api/Dockerfile

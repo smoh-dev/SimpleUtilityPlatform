@@ -1,6 +1,4 @@
-using Sup.Common;
 using Sup.Common.Logger;
-using Sup.Common.Utils;
 using Sup.Np.Api;
 using Sup.Np.Api.Repositories.Database;
 using Sup.Np.Api.Services.Product;

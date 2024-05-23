@@ -29,7 +29,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Sup.Common.Logger\Sup.Common.Logger.csproj" />
-      <ProjectReference Include="..\Sup.Common\Sup.Common.csproj" />
+      <ProjectReference Include="..\Sup.Common.Np\Sup.Common.Np.csproj" />
     </ItemGroup>
 
     <ItemGroup>
