@@ -37,3 +37,9 @@ services:
   #   build:
   #     context: .
   #     dockerfile: Sup.Mm.Api/Dockerfile
+
+  sup.mm.backgroundservice:
+    image: sup.mm.backgroundservice
+    build:
+      context: .
+      dockerfile: Sup.Mm.BackgroundService/Dockerfile
