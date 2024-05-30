@@ -1,10 +1,12 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sup.Mm.Api.Services;
 using Sup.Mm.Common.DTO;
 
 namespace Sup.Mm.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class NoteController : ControllerBase
