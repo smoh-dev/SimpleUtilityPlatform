@@ -1,3 +1,4 @@
+
 using Sup.Mm.BackgroundClient;
 
 var builder = Host.CreateApplicationBuilder(args);
