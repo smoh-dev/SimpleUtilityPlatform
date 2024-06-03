@@ -1,5 +1,7 @@
 using System.Data;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using Sup.Mm.BackgroundClient.Services;
 using Sup.Mm.Common.DTO;
 
 namespace Sup.Mm.BackgroundClient;
@@ -7,10 +9,11 @@ namespace Sup.Mm.BackgroundClient;
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
-
-    public Worker(ILogger<Worker> logger)
+    private readonly AuthService _authService;
+    public Worker(ILogger<Worker> logger, AuthService authService)
     {
         _logger = logger;
+        _authService = authService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,6 +38,10 @@ public class Worker : BackgroundService
         using var client = new HttpClient();
         try
         {
+            var token = await _authService.GetAccessTokenAsync();
+            if (string.IsNullOrEmpty(token))
+                throw new Exception("Failed to get access token.");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var response = await client.GetAsync(requestUrl);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
