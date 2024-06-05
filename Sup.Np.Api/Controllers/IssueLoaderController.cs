@@ -1,5 +1,6 @@
 
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sup.Common.Logger;
 using Sup.Common.Models.RequestParams;
@@ -7,6 +8,7 @@ using Sup.Np.Api.Services.Product;
 
 namespace Sup.Np.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class IssueLoaderController(SupLog log, IssueLoaderService svc ) : ControllerBase

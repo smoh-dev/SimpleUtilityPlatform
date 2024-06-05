@@ -27,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MyManager", "MyManager", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sup.Mm.BackgroundClient", "Sup.Mm.BackgroundClient\Sup.Mm.BackgroundClient.csproj", "{ADD68D5D-4C01-473C-8B1A-4C0095EE1FC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sup.Common.OpenAuthManager", "Sup.Common.OpenAuthManager\Sup.Common.OpenAuthManager.csproj", "{7A9D72E9-D3F1-420A-8AF0-432FA45E3F26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{ADD68D5D-4C01-473C-8B1A-4C0095EE1FC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADD68D5D-4C01-473C-8B1A-4C0095EE1FC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADD68D5D-4C01-473C-8B1A-4C0095EE1FC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A9D72E9-D3F1-420A-8AF0-432FA45E3F26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A9D72E9-D3F1-420A-8AF0-432FA45E3F26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A9D72E9-D3F1-420A-8AF0-432FA45E3F26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A9D72E9-D3F1-420A-8AF0-432FA45E3F26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,5 +92,6 @@ Global
 		{C26D9F2A-6B16-406E-B35A-6DC00CC0A74D} = {35E049AB-BB8B-4887-9ACC-C02ECFD462AB}
 		{257EA71A-342E-499A-8276-291E51FF66C7} = {404EBBB7-61F3-4EBE-A5F8-FA4A01EE257B}
 		{ADD68D5D-4C01-473C-8B1A-4C0095EE1FC1} = {E00F434B-FF8F-4E1E-AECB-018C7F3276A8}
+		{7A9D72E9-D3F1-420A-8AF0-432FA45E3F26} = {404EBBB7-61F3-4EBE-A5F8-FA4A01EE257B}
 	EndGlobalSection
 EndGlobal

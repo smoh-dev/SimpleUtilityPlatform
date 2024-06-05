@@ -3,6 +3,7 @@ using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Logger;
 using Sup.Common.Models.Redmine;
+using Sup.Common.TokenManager;
 using Sup.Common.Utils;
 using Sup.Np.IssueLoader.Services;
 
@@ -14,8 +15,9 @@ public class IssueLoaderWorker : BackgroundService
     private readonly RedmineService _redmineSvc;
     private readonly ApiService _apiSvc;
     private readonly IssueLoaderProfiles _profiles;
+    private readonly TokenManager _tokenManager;
 
-    public IssueLoaderWorker(IConfiguration configs)
+    public IssueLoaderWorker(IConfiguration configs, TokenManager tokenManager)
     {
 #if DEBUG
         _interval = 1000 * 5;
@@ -44,14 +46,14 @@ public class IssueLoaderWorker : BackgroundService
                 , esConfigs.EsUrl, esConfigs.EsIndex, esConfigs.EsUser, esConfigs.EsPassword.Length);
             log.Info("Elasticsearch log enabled.");
         }
-        _apiSvc = new ApiService(log, apiUrl);
+        _apiSvc = new ApiService(log, tokenManager, apiUrl);
 
         // Load profiles.       
         _profiles = _apiSvc.GetProfilesAsync().Result;
 
         // Create redmine service.
         _redmineSvc = new RedmineService(log, _profiles);
-
+        
         log = log.ForContext<IssueLoaderWorker>();
         log.Info("{class_name} created.", nameof(IssueLoaderWorker));
     }

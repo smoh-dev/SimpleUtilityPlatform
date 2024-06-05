@@ -7,12 +7,14 @@ using Sup.Common.Logger;
 using Sup.Common.Models.Redmine;
 using Sup.Common.Models.RequestParams;
 using Sup.Common.Models.Responses;
+using Sup.Common.TokenManager;
 
 namespace Sup.Np.IssueLoader.Services;
 
-public class ApiService(SupLog log, string apiUrl)
+public class ApiService(SupLog log, TokenManager tokenManager, string apiUrl )
 {
     private readonly SupLog _log = log.ForContext<ApiService>();
+    private readonly TokenManager _tokenManager = tokenManager;
     private readonly string _url = apiUrl;
 
     /// <summary>
@@ -23,7 +25,7 @@ public class ApiService(SupLog log, string apiUrl)
     {
         IssueLoaderProfiles result = new();
         
-        using var client = new HttpClient();
+        using var client = await _tokenManager.GetHttpClientAsync();
         var requestUrl = $"{_url}/common/profiles";
 
         try
@@ -72,7 +74,7 @@ public class ApiService(SupLog log, string apiUrl)
     /// <param name="projects"></param>
     public async Task PutProjectsAsync(List<RedmineProject> projects)
     {
-        using var client = new HttpClient();
+        using var client = await _tokenManager.GetHttpClientAsync();
         var requestUrl = $"{_url}/IssueLoader/projects";
         var param = new PutProjectsParam { Projects = projects };
 
@@ -97,7 +99,7 @@ public class ApiService(SupLog log, string apiUrl)
     /// <param name="issues"></param>
     public async Task PutIssuesAsync(List<RedmineIssue> issues)
     {
-        using var client = new HttpClient();
+        using var client = await _tokenManager.GetHttpClientAsync();
         var requestUrl = $"{_url}/IssueLoader/issues";
         var param = new PutIssuesParam { Issues = issues };
 
@@ -122,7 +124,7 @@ public class ApiService(SupLog log, string apiUrl)
     /// <returns></returns>
     public async Task<List<long>> GetUnpublishedIssuesAsync()
     {
-        using var client = new HttpClient();
+        using var client = await _tokenManager.GetHttpClientAsync();
         var requestUrl = $"{_url}/IssueLoader/issues/unpublished";
         
         try
