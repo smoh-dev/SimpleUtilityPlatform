@@ -1,3 +1,5 @@
+using Sup.Common.Models.DTO;
+
 namespace Sup.Np.PagePublisher;
 
 public class PagePublisherProfiles
@@ -7,4 +9,5 @@ public class PagePublisherProfiles
     public string NotionDbId { get; set; } = string.Empty;
     public string NotionApiKey { get; set; } = string.Empty;
     public string RedmineUrl { get; set; } = string.Empty; // To make link property.
+    public ScheduleDto Schedule { get; set; } = new();
 }
