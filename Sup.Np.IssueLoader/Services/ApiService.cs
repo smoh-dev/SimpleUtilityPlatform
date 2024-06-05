@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Sup.Common;
 using Sup.Common.Logger;
+using Sup.Common.Models.DTO;
 using Sup.Common.Models.Redmine;
 using Sup.Common.Models.RequestParams;
 using Sup.Common.Models.Responses;
@@ -52,6 +53,20 @@ public class ApiService(SupLog log, TokenManager tokenManager, string apiUrl )
                         break;
                     case Consts.ProfileEntries.LoaderTargetProjectIds:
                         result.TargetProjectIds = profile.Value.Split(',').Select(long.Parse).ToList();
+                        break;
+                    case Consts.ProfileEntries.LoaderSchedule:
+                        try
+                        {
+                            var schedule = JsonSerializer.Deserialize<ScheduleDto>(profile.Value);
+                            if(schedule == null)
+                                throw new NoNullAllowedException("Schedule deserialization failed.");
+                            result.Schedule = schedule;
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.Warn("Failed to get schedule. {error_message} Using default schedule.",
+                                ex.Message);
+                        }
                         break;
                 }
             }
