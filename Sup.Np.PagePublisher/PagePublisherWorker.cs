@@ -44,6 +44,7 @@ public class PagePublisherWorker : BackgroundService
                 , esConfigs.EsUrl, esConfigs.EsIndex, esConfigs.EsUser, esConfigs.EsPassword.Length);
             _log.Info("Elasticsearch log enabled.");
         }
+
         _apiSvc = new ApiService(_log, apiUrl);
 
         // Load profiles.       
@@ -59,6 +60,9 @@ public class PagePublisherWorker : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
+            await Task.Delay(_interval, stoppingToken);
+            if (!CheckSchedule()) continue;
+            
             var issuesToPublish = await _apiSvc.GetIssuesToPublishAsync();
             if (issuesToPublish.Count > 0)
             {
@@ -70,7 +74,53 @@ public class PagePublisherWorker : BackgroundService
             {
                 _log.Verbose("No issues to publish.");
             }
-            await Task.Delay(_interval, stoppingToken);
         }
+    }
+
+    private bool CheckSchedule()
+    {
+        var isScheduled = true;
+        var now = DateTime.Now;
+        int currentHour = now.TimeOfDay.Hours, startHour = 6, endHour = 17;
+        switch (now.DayOfWeek)
+        {
+            case DayOfWeek.Sunday:
+                isScheduled = _profiles.Schedule.WorkingInSunday;
+                startHour = _profiles.Schedule.SundayStartHour;
+                endHour = _profiles.Schedule.SundayEndHour;
+                break;
+            case DayOfWeek.Monday:
+                isScheduled = _profiles.Schedule.WorkingInMonday;
+                startHour = _profiles.Schedule.MondayStartHour;
+                endHour = _profiles.Schedule.MondayEndHour;
+                break;
+            case DayOfWeek.Tuesday:
+                isScheduled = _profiles.Schedule.WorkingInTuesday;
+                startHour = _profiles.Schedule.TuesdayStartHour;
+                endHour = _profiles.Schedule.TuesdayEndHour;
+                break;
+            case DayOfWeek.Wednesday:
+                isScheduled = _profiles.Schedule.WorkingInWednesday;
+                startHour = _profiles.Schedule.WednesdayStartHour;
+                endHour = _profiles.Schedule.WednesdayEndHour;
+                break;
+            case DayOfWeek.Thursday:
+                isScheduled = _profiles.Schedule.WorkingInThursday;
+                startHour = _profiles.Schedule.ThursdayStartHour;
+                endHour = _profiles.Schedule.ThursdayEndHour;
+                break;
+            case DayOfWeek.Friday:
+                isScheduled = _profiles.Schedule.WorkingInFriday;
+                startHour = _profiles.Schedule.FridayStartHour;
+                endHour = _profiles.Schedule.FridayEndHour;
+                break;
+            case DayOfWeek.Saturday:
+                isScheduled = _profiles.Schedule.WorkingInFriday;
+                startHour = _profiles.Schedule.FridayStartHour;
+                endHour = _profiles.Schedule.FridayEndHour;
+                break;
+        }
+
+        return isScheduled && currentHour >= startHour && currentHour < endHour;
     }
 }

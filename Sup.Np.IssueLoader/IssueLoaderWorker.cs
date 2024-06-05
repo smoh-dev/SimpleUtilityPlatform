@@ -64,6 +64,9 @@ public class IssueLoaderWorker : BackgroundService
         
         while (!stoppingToken.IsCancellationRequested)
         {
+            await Task.Delay(_interval, stoppingToken);
+            if (!CheckSchedule()) continue;
+
             var unpublishedIssueNumbers = await _apiSvc.GetUnpublishedIssuesAsync();
             List<RedmineIssue> redmineIssues = new();
             if(unpublishedIssueNumbers.Count > 0)
@@ -74,8 +77,6 @@ public class IssueLoaderWorker : BackgroundService
 
             if(redmineIssues.Count > 0)
                 await _apiSvc.PutIssuesAsync(redmineIssues);
-            
-            await Task.Delay(_interval, stoppingToken);
         }
     }
     
@@ -113,5 +114,51 @@ public class IssueLoaderWorker : BackgroundService
         await _apiSvc.PutIssuesAsync(deletedIssues);
         
         return result;
+    }
+
+    private bool CheckSchedule()
+    {
+        var isScheduled = true;
+        var now = DateTime.Now;
+        int currentHour = now.TimeOfDay.Hours, startHour = 6, endHour = 17;
+        switch (now.DayOfWeek)
+        {
+            case DayOfWeek.Sunday:
+                isScheduled = _profiles.Schedule.WorkingInSunday;
+                startHour = _profiles.Schedule.SundayStartHour;
+                endHour = _profiles.Schedule.SundayEndHour;
+                break;
+            case DayOfWeek.Monday:
+                isScheduled = _profiles.Schedule.WorkingInMonday;
+                startHour = _profiles.Schedule.MondayStartHour;
+                endHour = _profiles.Schedule.MondayEndHour;
+                break;
+            case DayOfWeek.Tuesday:
+                isScheduled = _profiles.Schedule.WorkingInTuesday;
+                startHour = _profiles.Schedule.TuesdayStartHour;
+                endHour = _profiles.Schedule.TuesdayEndHour;
+                break;
+            case DayOfWeek.Wednesday:
+                isScheduled = _profiles.Schedule.WorkingInWednesday;
+                startHour = _profiles.Schedule.WednesdayStartHour;
+                endHour = _profiles.Schedule.WednesdayEndHour;
+                break;
+            case DayOfWeek.Thursday:
+                isScheduled = _profiles.Schedule.WorkingInThursday;
+                startHour = _profiles.Schedule.ThursdayStartHour;
+                endHour = _profiles.Schedule.ThursdayEndHour;
+                break;
+            case DayOfWeek.Friday:
+                isScheduled = _profiles.Schedule.WorkingInFriday;
+                startHour = _profiles.Schedule.FridayStartHour;
+                endHour = _profiles.Schedule.FridayEndHour;
+                break;
+            case DayOfWeek.Saturday:
+                isScheduled = _profiles.Schedule.WorkingInFriday;
+                startHour = _profiles.Schedule.FridayStartHour;
+                endHour = _profiles.Schedule.FridayEndHour;
+                break;
+        }
+        return isScheduled && currentHour >= startHour && currentHour < endHour;
     }
 }

@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.Json;
 using Sup.Common;
 using Sup.Common.Logger;
+using Sup.Common.Models.DTO;
 using Sup.Common.Models.RequestParams;
 using Sup.Common.Models.Responses;
 
@@ -56,6 +57,20 @@ public class ApiService
                         break;
                     case Consts.ProfileEntries.RedmineUrl:
                         result.RedmineUrl = profile.Value;
+                        break;
+                    case Consts.ProfileEntries.PublisherSchedule:
+                        try
+                        {
+                            var schedule = JsonSerializer.Deserialize<ScheduleDto>(profile.Value);
+                            if(schedule == null)
+                                throw new NoNullAllowedException("Schedule deserialization failed.");
+                            result.Schedule = schedule;
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.Warn("Failed to get schedule. {error_message} Using default schedule.",
+                                ex.Message);
+                        }
                         break;
                 }
             }

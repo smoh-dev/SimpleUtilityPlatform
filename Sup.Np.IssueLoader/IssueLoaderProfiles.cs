@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Sup.Common.Models.DTO;
 
 namespace Sup.Np.IssueLoader;
 
@@ -15,4 +16,6 @@ public class IssueLoaderProfiles
     
     [JsonPropertyName("target_project_ids")]
     public List<long> TargetProjectIds { get; set; } = new();
+
+    public ScheduleDto Schedule { get; set; } = new();
 }
