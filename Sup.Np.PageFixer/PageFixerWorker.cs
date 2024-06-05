@@ -2,6 +2,7 @@ using System.Data;
 using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Logger;
+using Sup.Common.TokenManager;
 using Sup.Np.PageFixer.Models;
 using Sup.Np.PageFixer.Services;
 
@@ -18,6 +19,7 @@ public class PageFixerWorker : BackgroundService
     
     public PageFixerWorker(
         IConfiguration configs,
+        TokenManager tokenManager,
         IHostApplicationLifetime appLifetime
         )
     {
@@ -33,7 +35,7 @@ public class PageFixerWorker : BackgroundService
         var log = new SupLog(true, esConfigs);
         if (log.IsEnabledEsLog())
             log.Info("Elasticsearch log enabled.");
-        _apiSvc = new ApiService(log, apiUrl);
+        _apiSvc = new ApiService(log, tokenManager, apiUrl);
         
         // Load profiles.       
         _profiles = _apiSvc.GetProfilesAsync().Result;

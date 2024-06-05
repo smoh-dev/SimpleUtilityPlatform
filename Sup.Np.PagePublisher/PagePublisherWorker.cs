@@ -2,6 +2,7 @@ using System.Data;
 using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Logger;
+using Sup.Common.TokenManager;
 using Sup.Common.Utils;
 using Sup.Np.PagePublisher.Services;
 
@@ -15,7 +16,7 @@ public class PagePublisherWorker : BackgroundService
     private readonly ApiService _apiSvc;
     private readonly NotionService _notionSvc;
 
-    public PagePublisherWorker(IConfiguration configs)
+    public PagePublisherWorker(IConfiguration configs, TokenManager tokenManager)
     {
 #if DEBUG
         _interval = 1000 * 5;
@@ -44,8 +45,7 @@ public class PagePublisherWorker : BackgroundService
                 , esConfigs.EsUrl, esConfigs.EsIndex, esConfigs.EsUser, esConfigs.EsPassword.Length);
             _log.Info("Elasticsearch log enabled.");
         }
-
-        _apiSvc = new ApiService(_log, apiUrl);
+        _apiSvc = new ApiService(_log, tokenManager, apiUrl);
 
         // Load profiles.       
         _profiles = _apiSvc.GetProfilesAsync().Result;

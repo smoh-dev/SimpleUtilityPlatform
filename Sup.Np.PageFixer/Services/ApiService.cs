@@ -4,6 +4,7 @@ using Sup.Common;
 using Sup.Common.Logger;
 using Sup.Common.Models.RequestParams;
 using Sup.Common.Models.Responses;
+using Sup.Common.TokenManager;
 using Sup.Np.PageFixer.Models;
 
 namespace Sup.Np.PageFixer.Services;
@@ -12,9 +13,11 @@ public class ApiService
 {
     private readonly SupLog _log;
     private readonly string _url;
-    public ApiService(SupLog log, string apiUrl)
+    private readonly TokenManager _tokenManager;
+    public ApiService(SupLog log, TokenManager tokenManager, string apiUrl)
     {
         _log = log.ForContext<ApiService>();
+        _tokenManager = tokenManager;
         _url = apiUrl;
     }
     
@@ -26,7 +29,7 @@ public class ApiService
     {
         PageFixerProfiles result = new();
         
-        using var client = new HttpClient();
+        using var client = await _tokenManager.GetHttpClientAsync();
         var requestUrl = $"{_url}/common/profiles";
 
         try
@@ -90,7 +93,7 @@ public class ApiService
             PostedAt = np.CreatedTime // Register the page creation date to trigger a refresh of PagePublisher.
         }).ToList());
         
-        using var client = new HttpClient();
+        using var client = await _tokenManager.GetHttpClientAsync();
         var requestUrl = $"{_url}/PagePublisher/pages";
         var request = new HttpRequestMessage(HttpMethod.Put, requestUrl);
         try

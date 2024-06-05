@@ -22,6 +22,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Sup.Common.Logger\Sup.Common.Logger.csproj" />
       <ProjectReference Include="..\Sup.Common.Np\Sup.Common.Np.csproj" />
+      <ProjectReference Include="..\Sup.Common.OpenAuthManager\Sup.Common.OpenAuthManager.csproj" />
     </ItemGroup>
 
     <ItemGroup>
