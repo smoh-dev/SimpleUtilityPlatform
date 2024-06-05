@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Entities.Redmine;
@@ -36,5 +38,38 @@ public class CommonService(SupLog log, IDbRepository db)
                 nameof(GetEsConfigsAsync), ex.Message);
             return null;
         }
+    }
+    
+    public async Task<string> GenerateLicenseAsync(string productCode)
+    {
+        var licenseKey = "";
+        try
+        {
+            var randomBytes = new byte[20];
+            RandomNumberGenerator.Fill(randomBytes);
+            const string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            StringBuilder result = new StringBuilder((randomBytes.Length + 4) / 5 * 8);
+            int byteIndex = 0, bitIndex = 0;
+            while (byteIndex < randomBytes.Length)
+            {
+                int currentByte = randomBytes[byteIndex];
+                int digitIndex = bitIndex + 5 > 8 ? 8 - bitIndex : 5;
+                var digit = currentByte >> (8 - (bitIndex + digitIndex)) & 0x1F;
+                result.Append(base32Chars[digit]);
+                bitIndex += 5;
+                if (bitIndex < 8) continue;
+                bitIndex -= 8;
+                byteIndex++;
+            }
+
+            licenseKey = result.ToString();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
+        return licenseKey;
     }
 }

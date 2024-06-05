@@ -77,4 +77,24 @@ public class CommonController(SupLog log, CommonService svc, IDbRepository db) :
     }
 
     #endregion Profile
+    
+    [HttpPost("license")]
+    public async Task<IActionResult> GenerateLicense(string productCode)
+    {
+        try
+        {
+            _sw.Restart();
+            var license = await _svc.GenerateLicenseAsync(productCode);
+            _sw.Stop();
+            _log.Verbose("{api_name} took {time}ms",
+                nameof(GenerateLicense), _sw.ElapsedMilliseconds);
+
+            return Ok(license);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, Consts.ErrorCode.DatabaseError, ex.Message));
+        }
+    }
+    
 }
