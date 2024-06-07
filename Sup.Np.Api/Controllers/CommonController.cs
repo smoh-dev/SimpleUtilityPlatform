@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sup.Common;
 using Sup.Common.Entities.Redmine;
@@ -79,6 +80,7 @@ public class CommonController(SupLog log, CommonService svc, IDbRepository db) :
     #endregion Profile
     
     [HttpPost("license")]
+    [Authorize(Policy = Consts.Auth.PolicyLicense)]
     public async Task<IActionResult> GenerateLicense(string productCode)
     {
         try

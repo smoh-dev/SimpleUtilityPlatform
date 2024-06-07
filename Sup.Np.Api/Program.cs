@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Sup.Common;
 using Sup.Common.Logger;
 using Sup.Np.Api;
 using Sup.Np.Api.Repositories.Database;
@@ -85,7 +86,17 @@ builder.Services.AddAuthentication(opt =>
         }
     };
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opt =>
+{
+    opt.AddPolicy(Consts.Auth.PolicyLicense, policy =>
+        policy.RequireAssertion(context =>
+        {
+            var scopeClaim = context.User.FindFirst(claim => claim.Type == "scope");
+            if (scopeClaim == null) return false;
+            var scopes = scopeClaim.Value.Split(' ');
+            return scopes.Any(s => s.Equals(Consts.Auth.ScopeLicense, StringComparison.OrdinalIgnoreCase));
+        }));
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
