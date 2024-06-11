@@ -83,4 +83,19 @@ public class CommonService(SupLog log, IDbRepository db)
 
         return licenseKey;
     }
+    
+    public async Task<int> CheckLicenseAsync(string productCode, string licenseKey)
+    {
+        try
+        {
+            var license = await _db.GetLicenseAsync<License>(productCode, licenseKey);
+            return license == null ? 0 : 1;
+        }
+        catch (Exception ex)
+        {
+            _log.Fatal(ex, "{method_name} failed. {error_message}",
+                nameof(CheckLicenseAsync), ex.Message);
+            return 0;
+        }
+    }
 }

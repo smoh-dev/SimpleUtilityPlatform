@@ -22,4 +22,22 @@ public partial class PostgresRepository
             await _conn.CloseAsync();
         }
     }
+
+    public async Task<T?> GetLicenseAsync<T>(string productCode, string licenseKey)
+    {
+        const string query = """
+                             SELECT * FROM license
+                             WHERE product = @Product AND key = @Key;
+                             """;
+        try
+        {
+            await _conn.OpenAsync();
+            var result = await _conn.QueryFirstOrDefaultAsync<T>(query, new { Product = productCode, Key = licenseKey });
+            return result;
+        }
+        finally
+        {
+            await _conn.CloseAsync();
+        }
+    }
 }

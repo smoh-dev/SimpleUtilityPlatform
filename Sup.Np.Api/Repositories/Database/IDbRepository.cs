@@ -177,5 +177,12 @@ public interface IDbRepository
     /// <param name="license"></param>
     /// <returns></returns>
     public Task<int> InsertLicenseAsync(License license);
+    /// <summary>
+    /// Get License from db. 
+    /// </summary>
+    /// <param name="productCode"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public Task<T?> GetLicenseAsync<T>(string productCode, string licenseKey);
     #endregion License
 }
