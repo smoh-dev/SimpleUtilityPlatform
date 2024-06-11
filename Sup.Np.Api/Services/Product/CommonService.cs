@@ -61,8 +61,19 @@ public class CommonService(SupLog log, IDbRepository db)
                 bitIndex -= 8;
                 byteIndex++;
             }
-
             licenseKey = result.ToString();
+
+            var license = new License
+            {
+                Key = licenseKey,
+                Product = productCode,
+            };
+            var insertedRowCount = await _db.InsertLicenseAsync(license);
+            if (insertedRowCount == 0)
+            {
+                _log.Error("{method_name} failed. InsertedRowCount is 0.", nameof(GenerateLicenseAsync));
+                return "";
+            }
         }
         catch (Exception e)
         {
