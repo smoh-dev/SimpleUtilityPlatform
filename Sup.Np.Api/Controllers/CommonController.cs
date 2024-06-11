@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sup.Common;
 using Sup.Common.Entities.Redmine;
 using Sup.Common.Logger;
+using Sup.Common.Models.RequestParams;
 using Sup.Common.Models.Responses;
 using Sup.Np.Api.Repositories.Database;
 using Sup.Np.Api.Services.Product;
@@ -77,4 +79,45 @@ public class CommonController(SupLog log, CommonService svc, IDbRepository db) :
     }
 
     #endregion Profile
+    
+    #region License
+    [HttpGet("license/{productCode}")]
+    [Authorize(Policy = Consts.Auth.PolicyLicense)]
+    public async Task<IActionResult> GenerateLicense(string productCode)
+    {
+        try
+        {
+            _sw.Restart();
+            var license = await _svc.GenerateLicenseAsync(productCode);
+            _sw.Stop();
+            _log.Verbose("{api_name} took {time}ms",
+                nameof(GenerateLicense), _sw.ElapsedMilliseconds);
+
+            return Ok(license);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, Consts.ErrorCode.DatabaseError, ex.Message));
+        }
+    }
+    [HttpPost("license")]
+    public async Task<IActionResult> CheckLicense([FromBody]CheckLicenseParam param)
+    {
+        try
+        {
+            _sw.Restart();
+            var isValid = await _svc.CheckLicenseAsync(param.ProductCode, param.LicenseKey);
+            _sw.Stop();
+            _log.Verbose("{api_name} took {time}ms",
+                nameof(CheckLicense), _sw.ElapsedMilliseconds);
+            return (isValid > 0) ? Ok() : Unauthorized();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, Consts.ErrorCode.DatabaseError, ex.Message));
+        }
+    }
+    
+    #endregion License
+    
 }

@@ -169,4 +169,20 @@ public interface IDbRepository
     public Task<int> UpdateProjectsAsync<T>(List<Project> projects);
 
     #endregion Project
+    
+    #region License
+    /// <summary>
+    /// Insert new license to db.
+    /// </summary>
+    /// <param name="license"></param>
+    /// <returns></returns>
+    public Task<int> InsertLicenseAsync(License license);
+    /// <summary>
+    /// Get License from db. 
+    /// </summary>
+    /// <param name="productCode"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public Task<T?> GetLicenseAsync<T>(string productCode, string licenseKey);
+    #endregion License
 }

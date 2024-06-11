@@ -1,7 +1,10 @@
 using System.Data;
+using System.Text;
+using System.Text.Json;
 using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Logger;
+using Sup.Common.Models.RequestParams;
 using Sup.Common.TokenManager;
 using Sup.Common.Utils;
 using Sup.Np.PagePublisher.Services;
@@ -31,6 +34,13 @@ public class PagePublisherWorker : BackgroundService
         if (string.IsNullOrEmpty(apiUrl))
             throw new NoNullAllowedException("Api url is not set.");
 
+        // Check license.
+        var licenseKey = Environment.GetEnvironmentVariable("LICENSE_KEY") ?? configs["LicenseKey"];
+        if (licenseKey == null)
+            throw new NoNullAllowedException("LicenseKey is not set.");
+        if (!CheckLicenseAsync(apiUrl, licenseKey).Result)
+            throw new HttpRequestException("Failed to check license.");
+        
         // Create loader and api service.
         var encKey = Environment.GetEnvironmentVariable("ENCRYPT_KEY") ?? configs["EncryptKey"];
         if (encKey == null)
@@ -122,5 +132,29 @@ public class PagePublisherWorker : BackgroundService
         }
 
         return isScheduled && currentHour >= startHour && currentHour < endHour;
+    }
+    
+    /// <summary>
+    /// Check license before start the IssueLoader.
+    /// </summary>
+    /// <param name="apiUrl"></param>
+    /// <param name="licenseKey"></param>
+    /// <exception cref="HttpRequestException">Failed to check license</exception>
+    /// <returns></returns>
+    private async Task<bool> CheckLicenseAsync(string apiUrl, string licenseKey)
+    {
+        using var client = new HttpClient();
+        var requestUrl = $"{apiUrl}/Common/license";
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+        var param = new CheckLicenseParam
+        {
+            ProductCode = Consts.ProductCode.NpPagePublisher,
+            LicenseKey = licenseKey,
+        };
+        var json = JsonSerializer.Serialize(param);
+        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        return true;
     }
 }

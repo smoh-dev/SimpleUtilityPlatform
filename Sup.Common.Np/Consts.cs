@@ -68,4 +68,10 @@ public static class Consts
         public const string NpPagePublisher = "NPPPB";
     }
 
+    public static class Auth
+    {
+        public const string ScopeLicense = "license";
+        public const string PolicyLicense = "PolocyLicense"; // "license
+    }
+
 }
