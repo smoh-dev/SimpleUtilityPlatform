@@ -24,4 +24,25 @@ public partial class PostgresRepository
             await _conn.CloseAsync();
         }
     }
+
+    public async Task<T?> GetProfileAsync<T>(string entry)
+    {
+        const string query = """
+                             SELECT entry AS Entry,
+                                    value AS Value
+                             FROM profile
+                             WHERE entry = @entry;
+                             """;
+        
+        try
+        {
+            await _conn.OpenAsync();
+            var result = await _conn.QueryFirstOrDefaultAsync<T>(query, new { entry });
+            return result;
+        }
+        finally
+        {
+            await _conn.CloseAsync();
+        }
+    }
 }

@@ -44,6 +44,8 @@ public static class Consts
         
         public const string FixerMaxIssueLimit = "FIXER_MAX_ISSUE_LIMIT";
         public const string FixerMinIssueLimit = "FIXER_MIN_ISSUE_LIMIT";
+        
+        public const string AwsKmsKeyId = "AWS_KMS_KEY_ID";
     }
 
     /// <summary>
@@ -72,6 +74,8 @@ public static class Consts
     {
         public const string ScopeLicense = "license";
         public const string PolicyLicense = "PolocyLicense"; // "license
+        public const string ScopeKms = "kms";
+        public const string PolicyKms = "PolicyKms"; // "kms"
     }
 
 }

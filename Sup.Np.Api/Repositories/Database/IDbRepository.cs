@@ -120,6 +120,7 @@ public interface IDbRepository
     
     #region Profile
     public Task<List<T>> GetProfilesAsync<T>();
+    public Task<T?> GetProfileAsync<T>(string entry);
     #endregion Profile
     
     #region Project

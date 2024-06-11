@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sup.Common;
 using Sup.Common.Entities.Redmine;
+using Sup.Common.Kms;
 using Sup.Common.Logger;
 using Sup.Common.Models.RequestParams;
 using Sup.Common.Models.Responses;
@@ -13,12 +14,13 @@ namespace Sup.Np.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class CommonController(SupLog log, CommonService svc, IDbRepository db) : ControllerBase
+public class CommonController(SupLog log, CommonService svc, IDbRepository db, AwsKmsEncryptor awsKmsEncryptor) : ControllerBase
 {
     private readonly Stopwatch _sw = new();
     private readonly SupLog _log = log.ForContext<CommonController>();
     private readonly CommonService _svc = svc;
     private readonly IDbRepository _db = db;
+    private readonly AwsKmsEncryptor _enc = awsKmsEncryptor;
 
     /// <summary>
     /// Ping the server to check if it is alive.
@@ -29,6 +31,53 @@ public class CommonController(SupLog log, CommonService svc, IDbRepository db) :
     {
         return Ok();
     }
+    
+    #region KMSTest
+
+    [HttpPost("encrypt")]
+    [Authorize(Policy = Consts.Auth.PolicyKms)]
+    public async Task<IActionResult> EncryptString(string input)
+    {
+        try
+        {
+            _sw.Restart();
+            var encrypted = await _enc.EncryptStringAsync(input);
+            _sw.Stop();
+            _log.Verbose("{api_name} took {time}ms",
+                nameof(EncryptString), _sw.ElapsedMilliseconds);
+
+            return Ok(encrypted);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, Consts.ErrorCode.DatabaseError, ex.Message));
+        
+        }
+    }
+    
+    [HttpPost("decrypt")]
+    [Authorize(Policy = Consts.Auth.PolicyKms)]
+    public async Task<IActionResult> DecryptString(string input)
+    {
+        try
+        {
+            _sw.Restart();
+            var encrypted = await _enc.DecryptStringAsync(input);
+            _sw.Stop();
+            _log.Verbose("{api_name} took {time}ms",
+                nameof(EncryptString), _sw.ElapsedMilliseconds);
+
+            return Ok(encrypted);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new ApiResponse(false, Consts.ErrorCode.DatabaseError, ex.Message));
+        
+        }
+    }
+    
+    #endregion KMSTest
+    
 
     #region Profile
 
