@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Sup.Common;
+using Sup.Common.Configs;
 using Sup.Common.Entities.Redmine;
 using Sup.Common.Kms;
 using Sup.Common.Logger;
@@ -10,8 +11,10 @@ using Sup.Np.Api;
 using Sup.Np.Api.Repositories.Database;
 using Sup.Np.Api.Services.Product;
 
+
 // Create a builder for the web host
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Bind configs
 #if DEBUG
@@ -21,27 +24,14 @@ const string configFileName = "appsettings.json";
 #endif
 builder.Configuration.AddJsonFile(configFileName, optional: true, reloadOnChange: true);
 
-// Add DB repository
-builder.Services.AddScoped<IDbRepository, PostgresRepository>();
 
-// Add services
+// Add DB repository, services, and controllers
+builder.Services.AddScoped<IDbRepository, PostgresRepository>();
 builder.Services.AddScoped<CommonService>();
 builder.Services.AddScoped<IssueLoaderService>();
 builder.Services.AddScoped<PagePublisherService>();
-
-// Add logger
-builder.Services.AddScoped<SupLog>(_ =>
-{
-    IConfiguration configuration = new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile(configFileName)
-        .Build();
-    var esConfigs = ProgramStartUp.GetEsConfigs(configuration);
-    return new SupLog(true, esConfigs);
-});
-
-// Add controllers
 builder.Services.AddControllers();
+
 
 // Add AWS KMS client
 var awsOptions = builder.Configuration.GetSection("AWS").Get<AwsKmsOptions>();
@@ -55,6 +45,26 @@ using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 }
 if(!awsOptions.IsValid()) throw new Exception("AWS configs are invalid.");
 builder.Services.AddSingleton<AwsKmsEncryptor>(_=> new AwsKmsEncryptor(awsOptions));
+
+
+// Add logger
+builder.Services.AddScoped<SupLog>(_ =>
+{
+    IConfiguration configuration = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile(configFileName)
+        .Build();
+    EsConfigs? esConfigs = null;
+    using (var scope = builder.Services.BuildServiceProvider().CreateScope())
+    {
+        var dbRepo = scope.ServiceProvider.GetRequiredService<IDbRepository>();
+        var kmsEnc = scope.ServiceProvider.GetRequiredService<AwsKmsEncryptor>();
+        esConfigs = ProgramStartUp.GetEsConfigs(in dbRepo, in kmsEnc, configuration);
+    }
+    
+    return new SupLog(true, esConfigs);
+});
+
 
 // Add oAuth
 var oAuthConfigs = builder.Configuration.GetSection("OAuth");
@@ -125,6 +135,7 @@ builder.Services.AddAuthorization(opt =>
         }));
 });
 
+
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -164,9 +175,16 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 // Build the web host
 var app = builder.Build();
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
+
+// Apply swagger
 #if DEBUG
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -186,9 +204,6 @@ if(Convert.ToBoolean(Environment.GetEnvironmentVariable("ENABLE_SWAGGER")))
 }
 #endif
 
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
 
+// Run app.
 app.Run();
