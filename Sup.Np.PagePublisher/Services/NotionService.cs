@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text.Json;
+using Sup.Common.Kms;
 using Sup.Common.Logger;
 using Sup.Common.Models.Notion;
 using Sup.Common.Models.RequestParams;
@@ -10,12 +11,20 @@ namespace Sup.Np.PagePublisher.Services;
 public class NotionService
 {
     private readonly SupLog _log;
-    private readonly PagePublisherProfiles _profiles;
+    private readonly string _redmineApiUrl;
+    private readonly string _notionApiUrl;
+    private readonly string _notionApiVersion;
+    private readonly string _notionDbId;
+    private readonly string _notionApiKey;
 
-    public NotionService(SupLog log, PagePublisherProfiles profiles)
+    public NotionService(SupLog log, PagePublisherProfiles profiles, AwsKmsEncryptor awsKmsEncryptor)
     {
         _log = log.ForContext<NotionService>();
-        _profiles = profiles;
+        _redmineApiUrl = profiles.RedmineUrl;
+        _notionApiUrl = profiles.NotionApiUrl;
+        _notionApiVersion = profiles.NotionApiVersion;
+        _notionDbId = profiles.NotionDbId;
+        _notionApiKey = awsKmsEncryptor.DecryptStringAsync(profiles.NotionApiKey).Result;
     }
 
     /// <summary>
@@ -25,13 +34,13 @@ public class NotionService
     public async Task<bool> ConnectionTestAsync()
     {
         bool result;
-        var requestUrl = $"{_profiles.NotionApiUrl}/users";
+        var requestUrl = $"{_notionApiUrl}/users";
         var client = new HttpClient();
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-            request.Headers.Add("Authorization", "Bearer secret_xMoST8XjEhDftmamqKoKu0qwK2t6iBUlbL84gnsRSJw");
-            request.Headers.Add("Notion-Version", _profiles.NotionApiVersion);
+            request.Headers.Add("Authorization", "Bearer " + _notionApiKey);
+            request.Headers.Add("Notion-Version", _notionApiVersion);
             var response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
             result = true;
@@ -54,8 +63,8 @@ public class NotionService
         try
         {
             var pages = issues.Select(i =>
-                new NotionPage(_profiles.NotionDbId, i.PageId, i.IssueNumber, i.Title, i.Status, i.Type,
-                    $"{_profiles.RedmineUrl}/issues/{i.IssueNumber}", i.Author, i.AssignedTo)
+                new NotionPage(_notionDbId, i.PageId, i.IssueNumber, i.Title, i.Status, i.Type,
+                    $"{_redmineApiUrl}/issues/{i.IssueNumber}", i.Author, i.AssignedTo)
             ).ToList();
 
             pagesToPost = pages.Where(p => string.IsNullOrEmpty(p.ExistingPageId)).ToList();
@@ -83,10 +92,10 @@ public class NotionService
         var result = new List<PutPageParam>();
         foreach (var page in pages)
         {
-            var requestUrl = $"{_profiles.NotionApiUrl}/pages/{page.ExistingPageId}";
+            var requestUrl = $"{_notionApiUrl}/pages/{page.ExistingPageId}";
             var request = new HttpRequestMessage(HttpMethod.Patch, requestUrl);
-            request.Headers.Add("Notion-Version", _profiles.NotionApiVersion);
-            request.Headers.Add("Authorization", _profiles.NotionApiKey);
+            request.Headers.Add("Notion-Version", _notionApiVersion);
+            request.Headers.Add("Authorization", "Bearer " + _notionApiKey);
             try
             {
                 var json = JsonSerializer.Serialize(page);
@@ -130,15 +139,15 @@ public class NotionService
     private async Task<List<PutPageParam>> PostPageAsync(List<NotionPage> pages)
     {
         var result = new List<PutPageParam>();
-        var requestUrl = $"{_profiles.NotionApiUrl}/pages";
+        var requestUrl = $"{_notionApiUrl}/pages";
 
         foreach (var page in pages)
         {
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                request.Headers.Add("Notion-Version", _profiles.NotionApiVersion);
-                request.Headers.Add("Authorization", "Bearer " + _profiles.NotionApiKey);
+                request.Headers.Add("Notion-Version", _notionApiVersion);
+                request.Headers.Add("Authorization", "Bearer " + _notionApiKey);
                 var json = JsonSerializer.Serialize(page);
                 var content = new StringContent(json, null, "application/json");
                 request.Content = content;

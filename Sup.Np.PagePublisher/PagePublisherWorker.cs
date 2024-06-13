@@ -45,7 +45,7 @@ public class PagePublisherWorker : BackgroundService
         _profiles = _apiSvc.GetProfilesAsync().Result;
 
         // Create notion service and test.
-        _notionSvc = new NotionService(_log, _profiles);
+        _notionSvc = new NotionService(_log, _profiles, awsKmsEncryptor);
         if (!_notionSvc.ConnectionTestAsync().Result)
             throw new Exception("Failed to connect to Notion API.");
     }

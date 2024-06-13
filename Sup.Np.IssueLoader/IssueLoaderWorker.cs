@@ -46,7 +46,7 @@ public class IssueLoaderWorker : BackgroundService
         _profiles = _apiSvc.GetProfilesAsync().Result;
 
         // Create redmine service.
-        _redmineSvc = new RedmineService(log, _profiles);
+        _redmineSvc = new RedmineService(log, _profiles, kmsEncryptor);
 
         log = log.ForContext<IssueLoaderWorker>();
         log.Info("{class_name} created.", nameof(IssueLoaderWorker));
