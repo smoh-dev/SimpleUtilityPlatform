@@ -155,15 +155,11 @@ public class CommonController(SupLog log, CommonService svc, IDbRepository db, A
         try
         {
             _sw.Restart();
-            var license = await _svc.CheckLicenseAsync(param.ProductCode, param.HashedLicenseKey);
+            var licenseResponse = await _svc.CheckLicenseAsync(param.ProductCode, param.HashedLicenseKey);
             _sw.Stop();
             _log.Verbose("{api_name} took {time}ms",
                 nameof(CheckLicense), _sw.ElapsedMilliseconds);
-            return (license != null) ? Ok(new CheckLicenseResponse
-            {
-                Audience = license.AuthAudience,
-                SigningKey = license.AuthSigningKey,
-            }) : Unauthorized();
+            return (licenseResponse.Success) ? Ok(licenseResponse) : Unauthorized();
         }
         catch (Exception ex)
         {

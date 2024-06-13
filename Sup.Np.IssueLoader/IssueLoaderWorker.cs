@@ -1,11 +1,9 @@
 using System.Data;
-using System.Text;
-using System.Text.Json;
 using Sup.Common;
 using Sup.Common.Configs;
+using Sup.Common.Kms;
 using Sup.Common.Logger;
 using Sup.Common.Models.Redmine;
-using Sup.Common.Models.RequestParams;
 using Sup.Common.TokenManager;
 using Sup.Common.Utils;
 using Sup.Np.IssueLoader.Services;
@@ -15,40 +13,30 @@ namespace Sup.Np.IssueLoader;
 public class IssueLoaderWorker : BackgroundService
 {
     private readonly int _interval;
+    private readonly TokenManager _tokenManager;
+    private readonly AwsKmsEncryptor _kmsEncryptor;
     private readonly RedmineService _redmineSvc;
     private readonly ApiService _apiSvc;
     private readonly IssueLoaderProfiles _profiles;
-    private readonly TokenManager _tokenManager;
 
-    public IssueLoaderWorker(IConfiguration configs, TokenManager tokenManager)
+    public IssueLoaderWorker(IConfiguration configs, TokenManager tokenManager, AwsKmsEncryptor awsKmsEncryptor)
     {
 #if DEBUG
         _interval = 1000 * 5;
 #else
         _interval = 1000 * 60;
 #endif
+        _tokenManager = tokenManager;
+        _kmsEncryptor = awsKmsEncryptor;
 
-        // Validate.
+        // Create loader and api service.
         var apiHost = Environment.GetEnvironmentVariable("API_HOST");
         var apiPort = Environment.GetEnvironmentVariable("API_PORT");
         var apiUrl = !string.IsNullOrEmpty(apiHost) ? $"http://{apiHost}:{apiPort}" : configs["ApiUrl"];
         if (string.IsNullOrEmpty(apiUrl))
             throw new NoNullAllowedException("Api url is not set.");
-
-        // Check license.
-        var licenseKey = Environment.GetEnvironmentVariable("LICENSE_KEY") ?? configs["LicenseKey"];
-        if (licenseKey == null)
-            throw new NoNullAllowedException("LicenseKey is not set.");
-        if (!CheckLicenseAsync(apiUrl, licenseKey).Result)
-            throw new HttpRequestException("Failed to check license.");
-
-        // Create loader and api service.
-        var encKey = Environment.GetEnvironmentVariable("ENCRYPT_KEY") ?? configs["EncryptKey"];
-        if (encKey == null)
-            throw new NoNullAllowedException("EncryptKey is not set.");
-        var enc = new Encrypter(encKey);
         var esConfigs = new EsConfigs(Consts.ProductCode.NpIssueLoader, apiUrl);
-        esConfigs.EsPassword = enc.Decrypt(esConfigs.EsPassword);
+        esConfigs.EsPassword = _kmsEncryptor.DecryptStringAsync(esConfigs.EsPassword).Result;
         var log = new SupLog(true, esConfigs);
         if (log.IsEnabledEsLog())
         {
@@ -175,29 +163,5 @@ public class IssueLoaderWorker : BackgroundService
         }
 
         return isScheduled && currentHour >= startHour && currentHour < endHour;
-    }
-
-    /// <summary>
-    /// Check license before start the IssueLoader.
-    /// </summary>
-    /// <param name="apiUrl"></param>
-    /// <param name="licenseKey"></param>
-    /// <exception cref="HttpRequestException">Failed to check license</exception>
-    /// <returns></returns>
-    private async Task<bool> CheckLicenseAsync(string apiUrl, string licenseKey)
-    {
-        using var client = new HttpClient();
-        var requestUrl = $"{apiUrl}/Common/license";
-        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-        var param = new CheckLicenseParam
-        {
-            ProductCode = Consts.ProductCode.NpIssueLoader,
-            LicenseKey = licenseKey,
-        };
-        var json = JsonSerializer.Serialize(param);
-        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        return true;
     }
 }
