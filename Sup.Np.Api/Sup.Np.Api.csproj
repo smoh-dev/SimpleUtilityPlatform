@@ -13,6 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AWSSDK.KeyManagementService" Version="3.7.303.9" />
         <PackageReference Include="Dapper" Version="2.1.35" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.5" />
@@ -30,8 +31,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Sup.Common.Kms\Sup.Common.Kms.csproj" />
       <ProjectReference Include="..\Sup.Common.Logger\Sup.Common.Logger.csproj" />
       <ProjectReference Include="..\Sup.Common.Np\Sup.Common.Np.csproj" />
+      <ProjectReference Include="..\Sup.Common\Sup.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>

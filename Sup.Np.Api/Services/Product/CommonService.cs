@@ -4,6 +4,8 @@ using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Entities.Redmine;
 using Sup.Common.Logger;
+using Sup.Common.Models.Responses;
+using Sup.Common.Utils;
 using Sup.Np.Api.Repositories.Database;
 
 namespace Sup.Np.Api.Services.Product;
@@ -12,7 +14,7 @@ public class CommonService(SupLog log, IDbRepository db)
 {
     private readonly SupLog _log = log.ForContext<CommonService>();
     private readonly IDbRepository _db = db;
-    
+
     public async Task<EsConfigs?> GetEsConfigsAsync(string productCode)
     {
         try
@@ -39,7 +41,7 @@ public class CommonService(SupLog log, IDbRepository db)
             return null;
         }
     }
-    
+
     public async Task<string> GenerateLicenseAsync(string productCode)
     {
         var licenseKey = "";
@@ -61,6 +63,7 @@ public class CommonService(SupLog log, IDbRepository db)
                 bitIndex -= 8;
                 byteIndex++;
             }
+
             licenseKey = result.ToString();
 
             var license = new License
@@ -83,19 +86,46 @@ public class CommonService(SupLog log, IDbRepository db)
 
         return licenseKey;
     }
-    
-    public async Task<int> CheckLicenseAsync(string productCode, string licenseKey)
+
+    /// <summary>
+    /// Verifies that the licence is correct and returns the OAuth information.
+    /// </summary>
+    /// <param name="productCode"></param>
+    /// <param name="hashedLicenseKey"></param>
+    /// <returns></returns>
+    public async Task<CheckLicenseResponse> CheckLicenseAsync(string productCode, string hashedLicenseKey)
     {
+        CheckLicenseResponse response;
         try
         {
-            var license = await _db.GetLicenseAsync<License>(productCode, licenseKey);
-            return license == null ? 0 : 1;
+            var supHash = new SupHash();
+            var licenses = await _db.GetLicensesAsync<License>(productCode);
+            // return verified license.
+            var validatedLicense = licenses.FirstOrDefault(license =>
+                supHash.VerityHash512(license.Key, hashedLicenseKey));
+            if (validatedLicense == null)
+                throw new Exception("License is invalid.");
+            var tokenUrl = _db.GetProfileAsync<Profile>(Consts.ProfileEntries.OAuthTokenUrl).Result?.Value;
+            if (string.IsNullOrEmpty(tokenUrl))
+                throw new Exception("OAuthTokenUrl is missing.");
+            var keyId = _db.GetProfileAsync<Profile>(Consts.ProfileEntries.AwsKmsKeyId).Result?.Value;
+            if (string.IsNullOrEmpty(keyId))
+                throw new Exception("AWS KMS key id is missing.");
+            response = new CheckLicenseResponse
+            {
+                Audience = validatedLicense.AuthAudience,
+                SigningKey = validatedLicense.AuthSigningKey,
+                TokenUrl = tokenUrl,
+                KeyId = keyId,
+            };
         }
         catch (Exception ex)
         {
             _log.Fatal(ex, "{method_name} failed. {error_message}",
                 nameof(CheckLicenseAsync), ex.Message);
-            return 0;
+            response = new CheckLicenseResponse(false, Consts.ErrorCode.Unknown, ex.Message);
         }
+
+        return response;
     }
 }

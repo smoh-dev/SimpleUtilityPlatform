@@ -1,15 +1,16 @@
 using System.Text.Json;
+using Sup.Common.Kms;
 using Sup.Common.Logger;
 using Sup.Common.Models.Redmine;
 
 namespace Sup.Np.IssueLoader.Services;
 
-public class RedmineService(SupLog log, IssueLoaderProfiles profiles)
+public class RedmineService(SupLog log, IssueLoaderProfiles profiles, AwsKmsEncryptor kmsEncryptor)
 {
     private const int Limit = 100;
     private readonly SupLog _log = log.ForContext<RedmineService>();
-    private readonly string _url = profiles.RedmineUrl;
-    private readonly string _key = profiles.RedmineApiKey;
+    private readonly string _url = kmsEncryptor.DecryptStringAsync(profiles.RedmineUrl).Result;
+    private readonly string _key = kmsEncryptor.DecryptStringAsync(profiles.RedmineApiKey).Result;
     private DateTime _lastLoadedTime = DateTime.Now - TimeSpan.FromDays(profiles.RecoverDuration);
 
     /// <summary>

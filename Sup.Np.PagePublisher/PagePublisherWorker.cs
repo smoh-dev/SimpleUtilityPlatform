@@ -1,12 +1,9 @@
 using System.Data;
-using System.Text;
-using System.Text.Json;
 using Sup.Common;
 using Sup.Common.Configs;
+using Sup.Common.Kms;
 using Sup.Common.Logger;
-using Sup.Common.Models.RequestParams;
 using Sup.Common.TokenManager;
-using Sup.Common.Utils;
 using Sup.Np.PagePublisher.Services;
 
 namespace Sup.Np.PagePublisher;
@@ -19,7 +16,7 @@ public class PagePublisherWorker : BackgroundService
     private readonly ApiService _apiSvc;
     private readonly NotionService _notionSvc;
 
-    public PagePublisherWorker(IConfiguration configs, TokenManager tokenManager)
+    public PagePublisherWorker(IConfiguration configs, TokenManager tokenManager, AwsKmsEncryptor awsKmsEncryptor)
     {
 #if DEBUG
         _interval = 1000 * 5;
@@ -27,27 +24,14 @@ public class PagePublisherWorker : BackgroundService
         _interval = 1000 * 60;
 #endif
 
-        // Validate.
+        // Create loader and api service.
         var apiHost = Environment.GetEnvironmentVariable("API_HOST");
         var apiPort = Environment.GetEnvironmentVariable("API_PORT");
         var apiUrl = !string.IsNullOrEmpty(apiHost) ? $"http://{apiHost}:{apiPort}" : configs["ApiUrl"];
         if (string.IsNullOrEmpty(apiUrl))
             throw new NoNullAllowedException("Api url is not set.");
-
-        // Check license.
-        var licenseKey = Environment.GetEnvironmentVariable("LICENSE_KEY") ?? configs["LicenseKey"];
-        if (licenseKey == null)
-            throw new NoNullAllowedException("LicenseKey is not set.");
-        if (!CheckLicenseAsync(apiUrl, licenseKey).Result)
-            throw new HttpRequestException("Failed to check license.");
-        
-        // Create loader and api service.
-        var encKey = Environment.GetEnvironmentVariable("ENCRYPT_KEY") ?? configs["EncryptKey"];
-        if (encKey == null)
-            throw new NoNullAllowedException("EncryptKey is not set.");
-        var enc = new Encrypter(encKey);
         var esConfigs = new EsConfigs(Consts.ProductCode.NpPagePublisher, apiUrl);
-        esConfigs.EsPassword = enc.Decrypt(esConfigs.EsPassword);
+        esConfigs.EsPassword = awsKmsEncryptor.DecryptStringAsync(esConfigs.EsPassword).Result;
         _log = new SupLog(true, esConfigs);
         if (_log.IsEnabledEsLog())
         {
@@ -61,7 +45,7 @@ public class PagePublisherWorker : BackgroundService
         _profiles = _apiSvc.GetProfilesAsync().Result;
 
         // Create notion service and test.
-        _notionSvc = new NotionService(_log, _profiles);
+        _notionSvc = new NotionService(_log, _profiles, awsKmsEncryptor);
         if (!_notionSvc.ConnectionTestAsync().Result)
             throw new Exception("Failed to connect to Notion API.");
     }
@@ -132,29 +116,5 @@ public class PagePublisherWorker : BackgroundService
         }
 
         return isScheduled && currentHour >= startHour && currentHour < endHour;
-    }
-    
-    /// <summary>
-    /// Check license before start the IssueLoader.
-    /// </summary>
-    /// <param name="apiUrl"></param>
-    /// <param name="licenseKey"></param>
-    /// <exception cref="HttpRequestException">Failed to check license</exception>
-    /// <returns></returns>
-    private async Task<bool> CheckLicenseAsync(string apiUrl, string licenseKey)
-    {
-        using var client = new HttpClient();
-        var requestUrl = $"{apiUrl}/Common/license";
-        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-        var param = new CheckLicenseParam
-        {
-            ProductCode = Consts.ProductCode.NpPagePublisher,
-            LicenseKey = licenseKey,
-        };
-        var json = JsonSerializer.Serialize(param);
-        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        return true;
     }
 }

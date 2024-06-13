@@ -6,6 +6,7 @@ namespace Sup.Common.Utils;
 /// <summary>
 /// A class that provides AES-based encryption and decryption functions.
 /// </summary>
+[Obsolete("This encryption method is deprecated; use AwsKms instead.", true)]
 public class Encrypter
 {
     private const int KeyLength = 16;
