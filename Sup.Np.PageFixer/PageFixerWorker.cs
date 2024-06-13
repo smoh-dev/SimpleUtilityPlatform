@@ -34,7 +34,7 @@ public class PageFixerWorker : BackgroundService
         var apiUrl = configs["ApiUrl"];
         if (string.IsNullOrEmpty(apiUrl))
             throw new NoNullAllowedException("Api url is not set in appsettings.json");
-        var esConfigs = new EsConfigs(Consts.ProductCode.NpIssueLoader, apiUrl);
+        var esConfigs = new EsConfigs(Consts.ProductCode.NpPageFixer, apiUrl);
         esConfigs.EsPassword = kmsEncryptor.DecryptStringAsync(esConfigs.EsPassword).Result;
         var log = new SupLog(true, esConfigs);
         if (log.IsEnabledEsLog())
