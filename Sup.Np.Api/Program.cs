@@ -7,6 +7,7 @@ using Sup.Common.Configs;
 using Sup.Common.Entities.Redmine;
 using Sup.Common.Kms;
 using Sup.Common.Logger;
+using Sup.Common.Utils;
 using Sup.Np.Api;
 using Sup.Np.Api.Repositories.Database;
 using Sup.Np.Api.Services.Product;
@@ -44,7 +45,11 @@ using (var scope = builder.Services.BuildServiceProvider().CreateScope())
     var licenseKey = configuration["LicenseKey"];
     if(string.IsNullOrEmpty(licenseKey)) throw new Exception("License key is missing.");
     var dbRepo = scope.ServiceProvider.GetRequiredService<IDbRepository>();
-    license = dbRepo.GetLicenseAsync<License>(Consts.ProductCode.NpApi, licenseKey).Result;
+    var supHash = new SupHash();
+    var hashedLicenseKey  = supHash.Hash512(licenseKey);
+    var licenses = dbRepo.GetLicensesAsync<License>(Consts.ProductCode.NpApi).Result;
+    license = licenses.FirstOrDefault(lic => 
+        supHash.VerityHash512(lic.Key, hashedLicenseKey));
 }
 if(license == null) throw new Exception("License is invalid.");
 

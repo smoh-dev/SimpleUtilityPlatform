@@ -6,6 +6,6 @@ public class CheckLicenseParam
 {
     [JsonPropertyName("product_code")]
     public string ProductCode { get; set; } = string.Empty;
-    [JsonPropertyName("license_key")]
-    public string LicenseKey { get; set; } = string.Empty;
+    [JsonPropertyName("hashed_license_key")]
+    public string HashedLicenseKey { get; set; } = string.Empty;
 }

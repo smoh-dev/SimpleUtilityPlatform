@@ -4,6 +4,7 @@ using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Entities.Redmine;
 using Sup.Common.Logger;
+using Sup.Common.Utils;
 using Sup.Np.Api.Repositories.Database;
 
 namespace Sup.Np.Api.Services.Product;
@@ -84,12 +85,15 @@ public class CommonService(SupLog log, IDbRepository db)
         return licenseKey;
     }
     
-    public async Task<License?> CheckLicenseAsync(string productCode, string licenseKey)
+    public async Task<License?> CheckLicenseAsync(string productCode, string hashedLicenseKey)
     {
         try
         {
-            var license = await _db.GetLicenseAsync<License>(productCode, licenseKey);
-            return license;
+            var supHash = new SupHash();
+            var licenses = await _db.GetLicensesAsync<License>(productCode);
+            // return verified license.
+            return licenses.FirstOrDefault(license => 
+                supHash.VerityHash512(license.Key, hashedLicenseKey));
         }
         catch (Exception ex)
         {
