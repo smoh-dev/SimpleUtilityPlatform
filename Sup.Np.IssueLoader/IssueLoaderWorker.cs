@@ -5,7 +5,6 @@ using Sup.Common.Kms;
 using Sup.Common.Logger;
 using Sup.Common.Models.Redmine;
 using Sup.Common.TokenManager;
-using Sup.Common.Utils;
 using Sup.Np.IssueLoader.Services;
 
 namespace Sup.Np.IssueLoader;
@@ -13,21 +12,17 @@ namespace Sup.Np.IssueLoader;
 public class IssueLoaderWorker : BackgroundService
 {
     private readonly int _interval;
-    private readonly TokenManager _tokenManager;
-    private readonly AwsKmsEncryptor _kmsEncryptor;
     private readonly RedmineService _redmineSvc;
     private readonly ApiService _apiSvc;
     private readonly IssueLoaderProfiles _profiles;
 
-    public IssueLoaderWorker(IConfiguration configs, TokenManager tokenManager, AwsKmsEncryptor awsKmsEncryptor)
+    public IssueLoaderWorker(IConfiguration configs, TokenManager tokenManager, AwsKmsEncryptor kmsEncryptor)
     {
 #if DEBUG
         _interval = 1000 * 5;
 #else
         _interval = 1000 * 60;
 #endif
-        _tokenManager = tokenManager;
-        _kmsEncryptor = awsKmsEncryptor;
 
         // Create loader and api service.
         var apiHost = Environment.GetEnvironmentVariable("API_HOST");
@@ -36,7 +31,7 @@ public class IssueLoaderWorker : BackgroundService
         if (string.IsNullOrEmpty(apiUrl))
             throw new NoNullAllowedException("Api url is not set.");
         var esConfigs = new EsConfigs(Consts.ProductCode.NpIssueLoader, apiUrl);
-        esConfigs.EsPassword = _kmsEncryptor.DecryptStringAsync(esConfigs.EsPassword).Result;
+        esConfigs.EsPassword = kmsEncryptor.DecryptStringAsync(esConfigs.EsPassword).Result;
         var log = new SupLog(true, esConfigs);
         if (log.IsEnabledEsLog())
         {

@@ -12,6 +12,7 @@ configFileName = "appsettings.json";
 var builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddJsonFile(configFileName, optional: true, reloadOnChange: true);
 
+
 // Check license
 var apiUrl = builder.Configuration["ApiUrl"];
 var licenseKey = builder.Configuration["LicenseKey"];
@@ -48,6 +49,7 @@ builder.Services.AddSingleton<TokenManager>(_ =>
     builder.Configuration.GetSection("OAuth").Bind(configs);
     return new TokenManager(configs);
 });
+
 
 // The BackgroundWorker works as a singleton, so it instantiates and
 // uses the classes it needs internally without the need to DI.
