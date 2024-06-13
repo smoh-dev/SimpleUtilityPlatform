@@ -33,6 +33,22 @@ builder.Services.AddScoped<PagePublisherService>();
 builder.Services.AddControllers();
 
 
+// Check license and get oAuth configs
+License? license = null;
+using (var scope = builder.Services.BuildServiceProvider().CreateScope())
+{
+    IConfiguration configuration = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile(configFileName)
+        .Build();
+    var licenseKey = configuration["LicenseKey"];
+    if(string.IsNullOrEmpty(licenseKey)) throw new Exception("License key is missing.");
+    var dbRepo = scope.ServiceProvider.GetRequiredService<IDbRepository>();
+    license = dbRepo.GetLicenseAsync<License>(Consts.ProductCode.NpApi, licenseKey).Result;
+}
+if(license == null) throw new Exception("License is invalid.");
+
+
 // Add AWS KMS client
 var awsOptions = builder.Configuration.GetSection("AWS").Get<AwsKmsOptions>();
 if(awsOptions == null) throw new Exception("AWS configs are missing.");
@@ -50,16 +66,12 @@ builder.Services.AddSingleton<AwsKmsEncryptor>(_=> new AwsKmsEncryptor(awsOption
 // Add logger
 builder.Services.AddScoped<SupLog>(_ =>
 {
-    IConfiguration configuration = new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile(configFileName)
-        .Build();
     EsConfigs? esConfigs = null;
     using (var scope = builder.Services.BuildServiceProvider().CreateScope())
     {
         var dbRepo = scope.ServiceProvider.GetRequiredService<IDbRepository>();
         var kmsEnc = scope.ServiceProvider.GetRequiredService<AwsKmsEncryptor>();
-        esConfigs = ProgramStartUp.GetEsConfigs(in dbRepo, in kmsEnc, configuration);
+        esConfigs = ProgramStartUp.GetEsConfigs(in dbRepo, in kmsEnc);
     }
     
     return new SupLog(true, esConfigs);
@@ -67,29 +79,23 @@ builder.Services.AddScoped<SupLog>(_ =>
 
 
 // Add oAuth
-var oAuthConfigs = builder.Configuration.GetSection("OAuth");
-var metadataAddress = oAuthConfigs["MetadataAddress"];
-var authority = oAuthConfigs["Authority"];
-var audience = oAuthConfigs["Audience"];
-var signingKey = oAuthConfigs["SigningKey"];
-var authorizationUrl = oAuthConfigs["AuthorizationUrl"];
-var tokenUrl = oAuthConfigs["TokenUrl"];
-if (string.IsNullOrEmpty(metadataAddress)
-    || string.IsNullOrEmpty(authority)
-    || string.IsNullOrEmpty(audience)
-    || string.IsNullOrEmpty(signingKey)
-    || string.IsNullOrEmpty(authorizationUrl)
-    || string.IsNullOrEmpty(tokenUrl))
-    throw new Exception("OAuth configs are missing.");
+OAuthConfigs? oAuthConfigs = null;
+using (var scope = builder.Services.BuildServiceProvider().CreateScope())
+{
+    var dbRepo = scope.ServiceProvider.GetRequiredService<IDbRepository>();
+    var kmsEnc = scope.ServiceProvider.GetRequiredService<AwsKmsEncryptor>();
+    oAuthConfigs = ProgramStartUp.GetOAuthConfigs(in dbRepo, in kmsEnc, in license);
+}
+if(oAuthConfigs == null) throw new Exception("OAuth configs are missing.");
 builder.Services.AddAuthentication(opt =>
 {
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(opt =>
 {
-    opt.MetadataAddress = metadataAddress;
-    opt.Authority = authority;
-    opt.Audience = audience;
+    opt.MetadataAddress = oAuthConfigs.MetadataAddress;
+    opt.Authority = oAuthConfigs.Authority;
+    opt.Audience = oAuthConfigs.Audience;
     opt.RequireHttpsMetadata = false;
     opt.TokenValidationParameters = new TokenValidationParameters
     {
@@ -99,7 +105,7 @@ builder.Services.AddAuthentication(opt =>
         ValidAudience = "account",
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(oAuthConfigs.SigningKey))
     };
     opt.Events = new JwtBearerEvents
     {
@@ -152,11 +158,11 @@ builder.Services.AddSwaggerGen(c =>
         {
             ClientCredentials = new OpenApiOAuthFlow
             {
-                AuthorizationUrl = new Uri(authorizationUrl),
-                TokenUrl = new Uri(tokenUrl),
+                AuthorizationUrl = new Uri(oAuthConfigs.AuthorizationUrl),
+                TokenUrl = new Uri(oAuthConfigs.TokenUrl),
             },
         },
-        OpenIdConnectUrl = new Uri(metadataAddress),
+        OpenIdConnectUrl = new Uri(oAuthConfigs.MetadataAddress),
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -189,8 +195,8 @@ app.MapControllers();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.OAuthClientId(audience);
-    c.OAuthClientSecret(signingKey);
+    c.OAuthClientId(oAuthConfigs.Audience);
+    c.OAuthClientSecret(oAuthConfigs.SigningKey);
 });
 #else
 if(Convert.ToBoolean(Environment.GetEnvironmentVariable("ENABLE_SWAGGER")))
@@ -198,8 +204,8 @@ if(Convert.ToBoolean(Environment.GetEnvironmentVariable("ENABLE_SWAGGER")))
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.OAuthClientId(audience);
-        c.OAuthClientSecret(signingKey); 
+        c.OAuthClientId(oAuthConfigs.Audience);
+        c.OAuthClientSecret(oAuthConfigs.SigningKey); 
     });
 }
 #endif

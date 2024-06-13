@@ -26,7 +26,8 @@ public partial class PostgresRepository
     public async Task<T?> GetLicenseAsync<T>(string productCode, string licenseKey)
     {
         const string query = """
-                             SELECT * FROM license
+                             SELECT key AS Key, product as Product, auth_audience AS AuthAudience, signing_key as AuthSigningKey 
+                             FROM license 
                              WHERE product = @Product AND key = @Key;
                              """;
         try

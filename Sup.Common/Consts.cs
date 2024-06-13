@@ -46,6 +46,11 @@ public static class Consts
         public const string FixerMinIssueLimit = "FIXER_MIN_ISSUE_LIMIT";
         
         public const string AwsKmsKeyId = "AWS_KMS_KEY_ID";
+
+        public const string OAuthAuthority = "OAUTH_AUTHORITY";
+        public const string OAuthAuthorizationUrl = "OAUTH_AUTHORIZATION_URL";
+        public const string OAuthMetadataUrl = "OAUTH_METADATA_URL";
+        public const string OAuthTokenUrl = "OAUTH_TOKEN_URL";
     }
 
     /// <summary>

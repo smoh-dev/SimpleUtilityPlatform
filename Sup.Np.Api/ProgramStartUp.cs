@@ -1,10 +1,7 @@
-using System.Data;
-using Npgsql;
 using Sup.Common;
 using Sup.Common.Configs;
 using Sup.Common.Entities.Redmine;
 using Sup.Common.Kms;
-using Sup.Common.Utils;
 using Sup.Np.Api.Repositories.Database;
 
 namespace Sup.Np.Api;
@@ -16,10 +13,9 @@ public static class ProgramStartUp
     /// </summary>
     /// <param name="dbRepo"></param>
     /// <param name="kmsEnc"></param>
-    /// <param name="configs"></param>
     /// <returns></returns>
     /// <exception cref="Exception">Failed connection test.</exception>
-    public static EsConfigs? GetEsConfigs(in IDbRepository dbRepo, in AwsKmsEncryptor kmsEnc, IConfiguration configs)
+    public static EsConfigs? GetEsConfigs(in IDbRepository dbRepo, in AwsKmsEncryptor kmsEnc)
     {
         EsConfigs? esConfigs = null;
         try
@@ -42,7 +38,56 @@ public static class ProgramStartUp
         {
             Console.WriteLine("Failed to load ES configs. {0}", ex);
         }
-        
+
         return esConfigs;
+    }
+
+    /// <summary>
+    /// Load OAuth configs from the database.
+    /// </summary>
+    /// <param name="dbRepo"></param>
+    /// <param name="kmsEnc"></param>
+    /// <param name="license"></param>
+    /// <returns></returns>
+    public static OAuthConfigs? GetOAuthConfigs(in IDbRepository dbRepo, in AwsKmsEncryptor kmsEnc, in License license)
+    {
+        OAuthConfigs oAuthConfigs = null;
+        try
+        {
+            var oAuthAuthority = dbRepo.GetProfileAsync<Profile>(Consts.ProfileEntries.OAuthAuthority).Result?.Value;
+            var oAuthAuthorizationUrl = dbRepo.GetProfileAsync<Profile>(Consts.ProfileEntries.OAuthAuthorizationUrl)
+                .Result?.Value;
+            var oAuthMetadataUrl =
+                dbRepo.GetProfileAsync<Profile>(Consts.ProfileEntries.OAuthMetadataUrl).Result?.Value;
+            var oAuthTokenUrl = dbRepo.GetProfileAsync<Profile>(Consts.ProfileEntries.OAuthTokenUrl).Result?.Value;
+            var oAuthAudience = license.AuthAudience;
+            var oAuthSigningKey = license.AuthSigningKey;
+            var decryptedSigningKey = kmsEnc.DecryptStringAsync(oAuthSigningKey).Result;
+
+            if (string.IsNullOrEmpty(oAuthAuthority) || string.IsNullOrEmpty(oAuthAuthorizationUrl) ||
+                string.IsNullOrEmpty(oAuthMetadataUrl) || string.IsNullOrEmpty(oAuthTokenUrl) ||
+                string.IsNullOrEmpty(oAuthAudience) || string.IsNullOrEmpty(decryptedSigningKey))
+            {
+                Console.WriteLine("OAuth configs are missing.");
+            }
+            else
+            {
+                oAuthConfigs = new OAuthConfigs
+                {
+                    Authority = oAuthAuthority,
+                    AuthorizationUrl = oAuthAuthorizationUrl,
+                    MetadataAddress = oAuthMetadataUrl,
+                    TokenUrl = oAuthTokenUrl,
+                    Audience = oAuthAudience,
+                    SigningKey = decryptedSigningKey
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Failed to load OAuth configs. {0}", ex);
+        }
+
+        return oAuthConfigs;
     }
 }
