@@ -159,7 +159,11 @@ public class CommonController(SupLog log, CommonService svc, IDbRepository db, A
             _sw.Stop();
             _log.Verbose("{api_name} took {time}ms",
                 nameof(CheckLicense), _sw.ElapsedMilliseconds);
-            return (license != null) ? Ok() : Unauthorized();
+            return (license != null) ? Ok(new CheckLicenseResponse
+            {
+                Audience = license.AuthAudience,
+                SigningKey = license.AuthSigningKey,
+            }) : Unauthorized();
         }
         catch (Exception ex)
         {
