@@ -16,6 +16,8 @@ builder.Configuration.AddJsonFile(configFileName, optional: true, reloadOnChange
 // Check license
 var apiUrl = builder.Configuration["ApiUrl"];
 var licenseKey = builder.Configuration["LicenseKey"];
+Console.WriteLine("ApiUrl: " + apiUrl);
+Console.WriteLine("LicenseKey: " + licenseKey);
 if (string.IsNullOrEmpty(apiUrl) || string.IsNullOrEmpty(licenseKey)) 
     throw new Exception("Information required for licence validation is missing.");
 var license = await ProgramStartup.CheckLicenseAsync(apiUrl, licenseKey);
@@ -26,6 +28,8 @@ if (license is not { Success: true })
 // Add AWS KMS client
 var accessKey = Environment.GetEnvironmentVariable("ACCESS_KEY") ?? builder.Configuration.GetValue("AccessKey", "");
 var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? builder.Configuration.GetValue("SecretKey", "");
+Console.WriteLine($"AccessKey: {accessKey}");
+Console.WriteLine($"SecretKey: {secretKey}");
 if(string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
     throw new Exception("AWS configs are missing.");
 var awsOptions = new AwsKmsOptions

@@ -39,6 +39,7 @@ License? license = null;
 using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 {
     var licenseKey = Environment.GetEnvironmentVariable("LICENSE_KEY") ?? builder.Configuration.GetValue("LicenseKey", "");
+    Console.WriteLine("LicenseKey: " + licenseKey);
     if(string.IsNullOrEmpty(licenseKey)) throw new Exception("License key is missing.");
     var dbRepo = scope.ServiceProvider.GetRequiredService<IDbRepository>();
     var supHash = new SupHash();
@@ -53,6 +54,8 @@ if(license == null) throw new Exception("License is invalid.");
 // Add AWS KMS client
 var accessKey = Environment.GetEnvironmentVariable("ACCESS_KEY") ?? builder.Configuration.GetValue("AccessKey", "");
 var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? builder.Configuration.GetValue("SecretKey", "");
+Console.WriteLine($"AccessKey: {accessKey}");
+Console.WriteLine($"SecretKey: {secretKey}");
 if(string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
     throw new Exception("AWS configs are missing.");
 var awsOptions = new AwsKmsOptions

@@ -10,10 +10,12 @@ services:
     volumes:
       - ./appsettings.json:/app/appsettings.json
     #environment:
+    #  - LICENSE_KEY=your-license-key
+    #  - ACCESS_KEY=your-access-key
+    #  - SECRET_KEY=your-secret-key
     #  - DB_HOST=localhost
     #  - DB_PORT=5432
     #  - DB_USER=postgres
     #  - DB_PASSWORD=changeme
     #  - DB_NAME=yourdb
-    #  - ENCRYPT_KEY=1234567890123456
     #  - ENABLE_SWAGGER=false
