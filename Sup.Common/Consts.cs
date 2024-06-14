@@ -83,4 +83,9 @@ public static class Consts
         public const string PolicyKms = "PolicyKms"; // "kms"
     }
 
+    public static class Aws
+    {
+        public const string Region = "ap-northeast-2";
+    }
+
 }
