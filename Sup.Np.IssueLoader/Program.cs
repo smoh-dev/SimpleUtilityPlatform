@@ -24,9 +24,17 @@ if (license is not { Success: true })
 
 
 // Add AWS KMS client
-var awsOptions = builder.Configuration.GetSection("AWS").Get<AwsKmsOptions>();
-if(awsOptions == null) throw new Exception("AWS configs are missing.");
-awsOptions.KeyId = license.KeyId;
+var accessKey = Environment.GetEnvironmentVariable("ACCESS_KEY") ?? builder.Configuration.GetValue("AccessKey", "");
+var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? builder.Configuration.GetValue("SecretKey", "");
+if(string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
+    throw new Exception("AWS configs are missing.");
+var awsOptions = new AwsKmsOptions
+{
+    AccessKey = accessKey,
+    SecretKey = secretKey,
+    Region = Consts.Aws.Region,
+    KeyId = license.KeyId
+};
 if(!awsOptions.IsValid()) throw new Exception("AWS configs are invalid.");
 builder.Services.AddSingleton<AwsKmsEncryptor>(_=> new AwsKmsEncryptor(awsOptions));
 

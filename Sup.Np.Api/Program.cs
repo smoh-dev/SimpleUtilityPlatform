@@ -38,11 +38,7 @@ builder.Services.AddControllers();
 License? license = null;
 using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 {
-    IConfiguration configuration = new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile(configFileName)
-        .Build();
-    var licenseKey = configuration["LicenseKey"];
+    var licenseKey = Environment.GetEnvironmentVariable("LICENSE_KEY") ?? builder.Configuration.GetValue("LicenseKey", "");
     if(string.IsNullOrEmpty(licenseKey)) throw new Exception("License key is missing.");
     var dbRepo = scope.ServiceProvider.GetRequiredService<IDbRepository>();
     var supHash = new SupHash();
@@ -55,8 +51,16 @@ if(license == null) throw new Exception("License is invalid.");
 
 
 // Add AWS KMS client
-var awsOptions = builder.Configuration.GetSection("AWS").Get<AwsKmsOptions>();
-if(awsOptions == null) throw new Exception("AWS configs are missing.");
+var accessKey = Environment.GetEnvironmentVariable("ACCESS_KEY") ?? builder.Configuration.GetValue("AccessKey", "");
+var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY") ?? builder.Configuration.GetValue("SecretKey", "");
+if(string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
+    throw new Exception("AWS configs are missing.");
+var awsOptions = new AwsKmsOptions
+{
+    AccessKey = accessKey,
+    SecretKey = secretKey,
+    Region = Consts.Aws.Region
+};
 using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 {
     var dbRepo = scope.ServiceProvider.GetRequiredService<IDbRepository>();
@@ -196,24 +200,18 @@ app.MapControllers();
 
 
 // Apply swagger
-#if DEBUG
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.OAuthClientId(oAuthConfigs.Audience);
-    c.OAuthClientSecret(oAuthConfigs.SigningKey);
-});
-#else
-if(Convert.ToBoolean(Environment.GetEnvironmentVariable("ENABLE_SWAGGER")))
+var isUseSwagger = Convert.ToBoolean(Environment.GetEnvironmentVariable("USE_SWAGGER"));
+if(!isUseSwagger)
+    isUseSwagger = builder.Configuration.GetValue("UseSwagger", false);
+if (isUseSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.OAuthClientId(oAuthConfigs.Audience);
-        c.OAuthClientSecret(oAuthConfigs.SigningKey); 
+        c.OAuthClientSecret(oAuthConfigs.SigningKey);
     });
 }
-#endif
 
 
 // Run app.
