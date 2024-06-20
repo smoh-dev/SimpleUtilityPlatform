@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------------------------------------------------
 -- Create tables
-create table project
+create table if not exists project
 (
     id   integer not null
         constraint project_pk
@@ -11,7 +11,7 @@ create table project
 alter table project
     owner to admin;
 
-create table issue
+create table if not exists issue
 (
     id              integer not null
         constraint issue_pk
@@ -36,7 +36,7 @@ create table issue
 alter table issue
     owner to admin;
 
-create table page
+create table if not exists page
 (
     id         varchar                  not null
         constraint page_pk
@@ -51,7 +51,7 @@ create table page
 alter table page
     owner to admin;
 
-create table profile
+create table if not exists profile
 (
     entry varchar not null
         constraint profile_pk
@@ -62,18 +62,41 @@ create table profile
 alter table profile
     owner to admin;
 
+create table if not exists license
+(
+    key           varchar not null
+        constraint license_pk
+            primary key,
+    product       varchar not null,
+    auth_audience varchar,
+    signing_key   varchar
+);
+
+alter table license
+    owner to admin;
+
+create index if not exists license_product_index
+    on license (product);
+
 ------------------------------------------------------------------------------------------------------------------------
 -- Inset default rows.
-insert into public.profile (entry, value) values ('ES_USER', 'elastic');
-insert into public.profile (entry, value) values ('ES_URL', 'http://localhost:9200');
-insert into public.profile (entry, value) values ('ES_PASSWORD', 'changeme');
-insert into public.profile (entry, value) values ('REDMINE_URL', 'http://localhost');
-insert into public.profile (entry, value) values ('NOTION_DB_ID', '00000000-0000-0000-0000-000000000000');
-insert into public.profile (entry, value) values ('REDMINE_API_KEY', 'changeme');
-insert into public.profile (entry, value) values ('NOTION_API_KEY', 'changeme');
-insert into public.profile (entry, value) values ('LOADER_TARGET_PROJECT_IDS', '0');
-insert into public.profile (entry, value) values ('NOTION_API_URL', 'https://api.notion.com/v1');
-insert into public.profile (entry, value) values ('NOTION_API_VERSION', '2022-06-28');
-insert into public.profile (entry, value) values ('LOADER_RECOVER_DURATION', '90');
-insert into public.profile (entry, value) values ('FIXER_MIN_ISSUE_LIMIT', '0');
-insert into public.profile (entry, value) values ('FIXER_MAX_ISSUE_LIMIT', '100000');
+insert into profile (entry, "value") values ('AWS_KMS_KEY_ID', '');
+insert into profile (entry, "value") values ('ES_PASSWORD', '');
+insert into profile (entry, "value") values ('ES_URL', '');
+insert into profile (entry, "value") values ('ES_USER', '');
+insert into profile (entry, "value") values ('FIXER_MAX_ISSUE_LIMIT', '');
+insert into profile (entry, "value") values ('FIXER_MIN_ISSUE_LIMIT', '');
+insert into profile (entry, "value") values ('LOADER_RECOVER_DURATION', '');
+insert into profile (entry, "value") values ('LOADER_SCHEDULE', '');
+insert into profile (entry, "value") values ('LOADER_TARGET_PROJECT_IDS', '');
+insert into profile (entry, "value") values ('NOTION_API_KEY', '');
+insert into profile (entry, "value") values ('NOTION_API_URL', '');
+insert into profile (entry, "value") values ('NOTION_API_VERSION', '');
+insert into profile (entry, "value") values ('NOTION_DB_ID', '');
+insert into profile (entry, "value") values ('OAUTH_AUTHORITY', '');
+insert into profile (entry, "value") values ('OAUTH_AUTHORIZATION_URL', '');
+insert into profile (entry, "value") values ('OAUTH_METADATA_URL', '');
+insert into profile (entry, "value") values ('OAUTH_TOKEN_URL', '');
+insert into profile (entry, "value") values ('PUBLISHER_SCHEDULE', '');
+insert into profile (entry, "value") values ('REDMINE_API_KEY', '');
+insert into profile (entry, "value") values ('REDMINE_URL', '');
