@@ -20,7 +20,7 @@ public class NotionService
     public NotionService(SupLog log, PagePublisherProfiles profiles, AwsKmsEncryptor awsKmsEncryptor)
     {
         _log = log.ForContext<NotionService>();
-        _redmineApiUrl = profiles.RedmineUrl;
+        _redmineApiUrl = awsKmsEncryptor.DecryptStringAsync(profiles.RedmineUrl).Result;
         _notionApiUrl = profiles.NotionApiUrl;
         _notionApiVersion = profiles.NotionApiVersion;
         _notionDbId = profiles.NotionDbId;
