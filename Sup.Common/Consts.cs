@@ -40,7 +40,7 @@ public static class Consts
         public const string LoaderTargetProjectIds = "LOADER_TARGET_PROJECT_IDS";
         public const string LoaderSchedule = "LOADER_SCHEDULE"; // json format
 
-        public const string PublisherSchedule = "PUBLISHER_SCEDULE"; // json format
+        public const string PublisherSchedule = "PUBLISHER_SCHEDULE"; // json format
         
         public const string FixerMaxIssueLimit = "FIXER_MAX_ISSUE_LIMIT";
         public const string FixerMinIssueLimit = "FIXER_MIN_ISSUE_LIMIT";
